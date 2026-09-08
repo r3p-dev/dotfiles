@@ -1,4 +1,4 @@
-set --erase fish_greeting
+set fish_greeting
 fish_add_path $HOME/.local/bin
 
 if status is-interactive

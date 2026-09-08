@@ -1,14 +1,18 @@
 add_newline = true
 
-[cmd_duration]
+[username]
+show_always = true
+format = "[$user]($style)@"
+
+[hostname]
+ssh_only = false
 
 [directory]
 truncation_length = 1
 
+[cmd_duration]
+min_time = 500
+
 [git_branch]
 
 [git_status]
-
-[hostname]
-
-[username]
