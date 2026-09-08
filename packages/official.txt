@@ -18,7 +18,7 @@ mpv
 noctalia
 podman
 udiskie
-udisk2
+udisks2
 wl-clipboard
 spotify-launcher
 zed
