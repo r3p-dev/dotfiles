@@ -111,6 +111,49 @@ else
 fi
 
 # ------------------------------------------
+# Setup Noctalia greeter (greetd)
+# ------------------------------------------
+
+GREETER_SESSION="$(command -v noctalia-greeter-session || true)"
+REBOOT_REQUIRED=0
+
+if [[ -n "$GREETER_SESSION" ]]; then
+    echo "==> Configuring Noctalia greeter..."
+
+    sudo install -d /etc/greetd
+
+    echo "    -> Writing /etc/greetd/config.toml"
+
+    sudo tee /etc/greetd/config.toml >/dev/null <<EOF
+[terminal]
+vt = 1
+
+[default_session]
+command = "$GREETER_SESSION"
+user = "greeter"
+EOF
+
+    DM_LINK="/etc/systemd/system/display-manager.service"
+
+    if [[ -L "$DM_LINK" ]]; then
+        CURRENT_DM="$(basename "$(readlink -f "$DM_LINK")")"
+
+        if [[ "$CURRENT_DM" != "greetd.service" ]]; then
+            echo "    -> Disabling $CURRENT_DM"
+            sudo systemctl disable "$CURRENT_DM"
+        fi
+    fi
+
+    echo "    -> Enabling greetd"
+    sudo systemctl enable greetd
+
+    REBOOT_REQUIRED=1
+else
+    echo "WARNING: noctalia-greeter-session was not found."
+    echo "WARNING: Skipping greetd configuration."
+fi
+
+# ------------------------------------------
 # Set Fish as default shell
 # ------------------------------------------
 
@@ -169,3 +212,9 @@ echo
 echo "=========================================="
 echo " Dotfiles installation complete!"
 echo "=========================================="
+
+if ((REBOOT_REQUIRED)); then
+    echo
+    echo "==> Display manager changed to greetd."
+    echo "==> Reboot to start the Noctalia greeter."
+fi
