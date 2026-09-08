@@ -1,0 +1,16 @@
+[overview]
+zoom = 0.5
+background_blur = true
+workspace_wallpaper = true
+shortcuts = true
+shortcut_keys = "1234567890"
+
+[hot_corners.top_left]
+enabled = true
+delay_ms = 500
+action = "overview-open"
+
+[hot_corners.top_right]
+enabled = true
+delay_ms = 500
+action = "overview-close"

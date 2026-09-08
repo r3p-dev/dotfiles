@@ -1,0 +1,26 @@
+[mgr]
+ratio = [0, 1, 1]
+sort_by = "natural"
+sort_dir_first = true
+linemode = "mtime"
+show_hidden = true
+
+[opener]
+edit = [
+    { run = "zed %s", orphan = true, desc = "Edit with Zed" },
+]
+
+image = [
+    { run = "feh %s", orphan = true, desc = "Open with feh" },
+]
+
+video = [
+    { run = "mpv %s", orphan = true, desc = "Play with MPV" },
+]
+
+[open]
+rules = [
+    { mime = "text/*", use = "edit" },
+    { mime = "image/*", use = "image" },
+    { mime = "video/*", use = "video" },
+]

@@ -1,0 +1,52 @@
+[include]
+files = [
+    "animations.toml",
+    "appearance.toml",
+    "input.toml",
+    "keybinds.toml",
+    "outputs.toml",
+    "overview.toml",
+    "window-rule.toml",
+]
+
+[include.optional]
+files = []
+
+[general]
+autostart = ["noctalia", "udiskie", "kitty"]
+mod_key = "Super"
+xwayland = true
+show_cheatsheet = false
+focus_on_activate = false
+honor_restored_maximize = false
+
+[environment]
+# GTK_THEME = "Adwaita:dark"
+# QT_QPA_PLATFORMTHEME = "qt5ct"
+
+[layout]
+mode = "scrolling"
+gap = 8
+width_presets = [0.333, 0.5, 0.667]
+
+[layout.struts]
+left = 0
+right = 0
+top = 0
+bottom = 0
+
+[layout.scrolling]
+direction = "horizontal"
+default_width_fraction = 0.5
+center_underfull_strip = true
+center_focused = false
+expand_single_column = true
+
+[layout.master]
+position = "left"
+default_width_fraction = 0.55
+new_on_top = true
+
+[workspaces]
+back_and_forth = false
+empty_above = false

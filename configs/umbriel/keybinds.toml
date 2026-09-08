@@ -1,0 +1,98 @@
+[keybinds]
+
+# ──────────────────────────── Applications & Session ────────────────────────
+"Mod+Return" = "spawn:kitty"
+"Mod+B" = "spawn:brave-origin"
+"Mod+I" = "spawn:librewolf"
+"Mod+K" = "spawn:zed"
+
+"Mod" = "spawn:noctalia msg panel-toggle launcher"
+"Mod+V" = "spawn:noctalia msg panel-toggle clipboard"
+"Mod+Z" = "spawn:noctalia msg panel-toggle launcher /emo"
+"Mod+/" = "spawn:noctalia msg panel-toggle control-center"
+"Alt+F4" = "spawn:noctalia msg panel-toggle session"
+"Mod+Shift+/" = "cheatsheet-toggle"
+
+"Mod+Q" = "window-close"
+
+# ──────────────────────────── Window Navigation ─────────────────────────────
+"Mod+Left" = "window-focus-left"
+"Mod+Down" = "window-focus-down"
+"Mod+Up" = "window-focus-up"
+"Mod+Right" = "window-focus-right"
+
+"Mod+Shift+Left" = "column-move-left"
+"Mod+Shift+Down" = "window-move-down"
+"Mod+Shift+Up" = "window-move-up"
+"Mod+Shift+Right" = "column-move-right"
+
+"Mod+WheelUp" = "window-focus-left"
+"Mod+WheelDown" = "window-focus-right"
+
+# ─────────────────────────── Window State & Layout ──────────────────────────
+"Mod+T" = "window-toggle-floating"
+"Mod+Shift+T" = "window-focus-switch-floating"
+"Mod+P" = "window-toggle-pinned"
+
+"Mod+M" = "window-toggle-maximize-to-edges"
+"Mod+F" = "window-toggle-maximize"
+
+"Mod+C" = "column-center"
+"Mod+Shift+C" = "window-center"
+
+# ──────────────────────────────── Overview ──────────────────────────────────
+"Mod+O" = { action = "overview-toggle", repeat = false }
+
+# ─────────────────────────── Window Size & Resize ───────────────────────────
+"Mod+R" = "window-cycle-width"
+"Mod+Shift+R" = "window-cycle-width-back"
+"Mod+Alt+R" = "window-cycle-height"
+"Mod+Alt+Shift+R" = "window-cycle-height-back"
+
+"Mod+Minus" = "window-modify-width:-0.1"
+"Mod+Equal" = "window-modify-width:0.1"
+"Mod+Alt+Minus" = "window-modify-height:-0.1"
+"Mod+Alt+Equal" = "window-modify-height:0.1"
+
+# ───────────────────────────── Window Consume / Expel ───────────────────────
+"Mod+Comma" = "window-consume-left"
+"Mod+Period" = "window-consume-right"
+"Mod+BackSpace" = "window-consume-or-expel-left"
+
+# ───────────────────────────── Workspace Navigation ─────────────────────────
+"Mod+Page_Up" = "workspace-previous"
+"Mod+Page_Down" = "workspace-next"
+"Mod+Shift+Page_Up" = "window-move-to-workspace-previous"
+"Mod+Shift+Page_Down" = "window-move-to-workspace-next"
+
+"Mod+Ctrl+WheelUp" = { action = "workspace-previous", cooldown_ms = 150 }
+"Mod+Ctrl+WheelDown" = { action = "workspace-next", cooldown_ms = 150 }
+
+# ───────────────────────────────── Scratchpads ──────────────────────────────
+"Mod+Shift+Space" = "window-move-to-scratchpad"
+"Mod+Space" = "scratchpad-toggle"
+"Mod+Ctrl+Space" = "window-restore-from-scratchpad"
+"Mod+Tab" = "scratchpad-focus-next"
+
+# ───────────────────────────────── Submaps ──────────────────────────────────
+"Mod+S" = { action = "submap:screencapture", repeat = false }
+"submap[screencapture],1" = { action = "spawn:grim screenshot.png", submap = "reset" }
+"submap[screencapture],2" = { action = "submap:region", repeat = false }
+"submap[screencapture],Escape" = "submap:reset"
+
+"submap[region],R" = { action = "spawn:grim -g \"$(slurp)\" screenshot.png", submap = "reset" }
+"submap[region],Escape" = "submap:reset"
+
+"Escape" = "submap:reset"
+
+# ────────────────────────────── Audio Controls ──────────────────────────────
+"XF86AudioRaiseVolume" = "spawn:wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"
+"XF86AudioLowerVolume" = "spawn:wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
+"XF86AudioMute" = "spawn:wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+"XF86AudioPlay" = "spawn:playerctl play-pause"
+"XF86AudioNext" = "spawn:playerctl next"
+"XF86AudioPrev" = "spawn:playerctl previous"
+
+# ─────────────────────────────── Display Brightness ─────────────────────────
+"XF86MonBrightnessDown" = { action = "spawn:noctalia msg brightness-down 10", allow_when_locked = true }
+"XF86MonBrightnessUp" = { action = "spawn:noctalia msg brightness-up 10", allow_when_locked = true }

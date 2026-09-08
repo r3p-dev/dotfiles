@@ -1,0 +1,64 @@
+[animation]
+enabled = true
+duration_ms = 250
+curve = "easeout"
+
+[animation.windows_in]
+enabled = true
+duration_ms = 150
+curve = "easeout"
+style = "popin"
+scale = 0.85
+
+[animation.windows_out]
+enabled = true
+duration_ms = 150
+curve = "easeout"
+style = "fade"
+
+[animation.windows_move]
+enabled = true
+duration_ms = 250
+curve = "snappy"
+
+[animation.workspaces]
+enabled = true
+duration_ms = 250
+curve = "easeout"
+
+[animation.overview]
+enabled = true
+duration_ms = 250
+curve = "easeout"
+
+[animation.scratchpad]
+enabled = false
+duration_ms = 250
+curve = "easeout"
+dim = 0.5
+blur = false
+scale = 0.0
+maximize = false
+fullscreen = false
+
+[animation.border]
+enabled = false
+duration_ms = 250
+curve = "easeout"
+
+[animation.dim_unfocused]
+enabled = false
+duration_ms = 250
+curve = "easeout"
+dim = 0.0
+
+[animation.layers]
+enabled = false
+duration_ms = 250
+curve = "easeout"
+
+[animation.beziers]
+myBezier = [0.05, 0.9, 0.1, 1.0]
+
+[animation.springs]
+myBounce = { damping = 0.5, stiffness = 200 }

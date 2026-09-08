@@ -1,0 +1,18 @@
+# [output.DP-1]
+# enabled = true
+# mode = "2560x1440@144"
+# position = [0, 0]
+# scale = 1.25
+# transform = "normal"
+# vrr = "fullscreen"
+# tearing = true
+# direct_scanout = true
+# hdr = "auto"
+# sdr_white = 203
+# workspaces = 5
+
+# [output.DP-1]
+# min_workspaces = 3
+
+# [output.DP-1.layout.scrolling]
+# default_width_fraction = 0.4
