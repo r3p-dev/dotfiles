@@ -27,10 +27,10 @@ starship
 slurp
 grim
 hyprpicker
-tesseract 
+tesseract
 tesseract-data-eng
 tesseract-data-ind
-zbar 
+zbar
 bc
 gpu-screen-recorder
 translate-shell
