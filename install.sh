@@ -183,6 +183,21 @@ else
 fi
 
 # ------------------------------------------
+# Install wallpapers
+# ------------------------------------------
+
+WALLPAPERS_DIR="$SCRIPT_DIR/wallpapers"
+WALLPAPERS_TARGET="$HOME/Pictures/Wallpapers"
+
+if [[ -d "$WALLPAPERS_DIR" ]]; then
+    echo "==> Installing wallpapers..."
+    mkdir -p "$WALLPAPERS_TARGET"
+    cp -a "$WALLPAPERS_DIR"/. "$WALLPAPERS_TARGET"/
+else
+    echo "WARNING: $WALLPAPERS_DIR not found."
+fi
+
+# ------------------------------------------
 # Install configs
 # ------------------------------------------
 

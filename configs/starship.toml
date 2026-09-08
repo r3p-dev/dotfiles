@@ -1,0 +1,15 @@
+[prompt]
+add_newline = true
+
+[cmd_duration]
+
+[directory]
+truncation_length = 1
+
+[git_branch]
+
+[git_status]
+
+[hostname]
+
+[username]

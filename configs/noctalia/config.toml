@@ -160,7 +160,7 @@ directory = "~/Pictures/Wallpapers"
 transition = []
 
     [wallpaper.default]
-    path = "/home/r3p/Pictures/Wallpapers/wallhaven.png"
+    path = "/home/r3p/Pictures/Wallpapers/porsche.png"
 
 [widget.battery]
 hide_when_plugged = true
