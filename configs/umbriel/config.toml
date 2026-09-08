@@ -36,7 +36,6 @@ top = 0
 bottom = 0
 
 [layout.scrolling]
-direction = "horizontal"
 default_width_fraction = 0.5
 center_underfull_strip = true
 center_focused = false
