@@ -9,9 +9,9 @@
 "Mod" = "spawn:noctalia msg panel-toggle launcher"
 "Mod+V" = "spawn:noctalia msg panel-toggle clipboard"
 "Mod+Z" = "spawn:noctalia msg panel-toggle launcher /emo"
-"Mod+/" = "spawn:noctalia msg panel-toggle control-center"
+"Mod+N" = "spawn:noctalia msg panel-toggle control-center"
 "Alt+F4" = "spawn:noctalia msg panel-toggle session"
-"Mod+Shift+/" = "cheatsheet-toggle"
+"Mod+Shift+Z" = "cheatsheet-toggle"
 
 "Mod+Q" = "window-close"
 
