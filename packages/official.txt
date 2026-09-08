@@ -22,3 +22,4 @@ udisks2
 wl-clipboard
 spotify-launcher
 zed
+xwayland-satellite
