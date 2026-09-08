@@ -1,5 +1,5 @@
 fastfetch
-feh
+imv
 fish
 kitty
 yazi
@@ -24,3 +24,14 @@ spotify-launcher
 zed
 xwayland-satellite
 starship
+slurp
+grim
+hyprpicker
+tesseract 
+tesseract-data-eng
+tesseract-data-ind
+zbar 
+bc
+gpu-screen-recorder
+translate-shell
+satty

@@ -4,12 +4,13 @@
 "Mod+Return" = "spawn:kitty"
 "Mod+B" = "spawn:brave-origin"
 "Mod+I" = "spawn:librewolf"
-"Mod+K" = "spawn:zed"
+"Mod+K" = "spawn:zeditor"
 
 "Mod" = "spawn:noctalia msg panel-toggle launcher"
 "Mod+V" = "spawn:noctalia msg panel-toggle clipboard"
 "Mod+Z" = "spawn:noctalia msg panel-toggle launcher /emo"
 "Mod+N" = "spawn:noctalia msg panel-toggle control-center"
+"Mod+X" = "spawn:noctalia msg panel-toggle noctalia/notes:panel"
 "Alt+F4" = "spawn:noctalia msg panel-toggle session"
 "Mod+Shift+Z" = "cheatsheet-toggle"
 

@@ -7,11 +7,11 @@ show_hidden = true
 
 [opener]
 edit = [
-    { run = "zed %s", orphan = true, desc = "Edit with Zed" },
+    { run = "zeditor %s", orphan = true, desc = "Edit with Zed" },
 ]
 
 image = [
-    { run = "feh %s", orphan = true, desc = "Open with feh" },
+    { run = "imv %s", orphan = true, desc = "Open with imv" },
 ]
 
 video = [

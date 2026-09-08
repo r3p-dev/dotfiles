@@ -2,10 +2,10 @@
 enable_overdrive = true
 
 [bar.default]
-center = [ "privacy", "notes", "clock", "notifications" ]
-end = [ "tray", "clipboard", "network", "volume", "battery", "session" ]
+center = [ "privacy", "clock", "notifications" ]
+end = [ "tray", "network", "volume", "battery", "session" ]
 margin_ends = 0
-start = [ "control-center", "workspaces", "media", "recorder" ]
+start = [ "control-center", "workspaces", "media", "screen-toolkit" ]
 
 [[control_center.shortcuts]]
 type = "clipboard"
@@ -75,12 +75,9 @@ position = "bottom_center"
 
 [plugins]
 enabled = [
-    "noctalia/kaomoji",
     "noctalia/notes",
-    "noctalia/screen_recorder",
-    "yuuto/arch-updater",
-    "8bury/mini-docker",
-    "ahmedhossamdev/sticky-notes"
+    "alexander/screen-toolkit",
+    "8bury/lid-guard",
 ]
 
 [shell]
@@ -179,9 +176,6 @@ type = "noctalia/notes:notes"
 
 [widget.privacy]
 hide_inactive = true
-
-[widget.recorder]
-type = "noctalia/screen_recorder:recorder"
 
 [widget.volume]
 show_label = false
