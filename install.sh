@@ -1,19 +1,31 @@
 #!/usr/bin/env bash
-
 set -euo pipefail
 
 # ==========================================
 # Dotfiles installer for EndeavourOS / Arch
 # ==========================================
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+REPO="https://github.com/r3p-dev/dotfiles/archive/refs/heads/main.tar.gz"
+TEMP_DIR="$(mktemp -d)"
+
+cleanup() {
+    rm -rf "$TEMP_DIR"
+}
+
+trap cleanup EXIT
+
+echo "==> Downloading dotfiles..."
+
+curl -fsSL "$REPO" | tar -xz -C "$TEMP_DIR"
+
+SCRIPT_DIR="$TEMP_DIR/dotfiles-main"
 
 OFFICIAL_PACKAGES="$SCRIPT_DIR/packages/official.txt"
 AUR_PACKAGES="$SCRIPT_DIR/packages/aur.txt"
 CONFIGS_DIR="$SCRIPT_DIR/configs"
 
 echo "==> Dotfiles installer"
-echo "==> Repository: $SCRIPT_DIR"
+echo "==> Source: GitHub"
 echo
 
 # ------------------------------------------
@@ -69,16 +81,16 @@ if [[ -f "$AUR_PACKAGES" ]]; then
         echo "==> yay is not installed."
         echo "==> Installing yay..."
 
-        TEMP_DIR="$(mktemp -d)"
+        TEMP_YAY="$(mktemp -d)"
 
-        trap 'rm -rf "$TEMP_DIR"' EXIT
-
-        git clone https://aur.archlinux.org/yay.git "$TEMP_DIR/yay"
+        git clone https://aur.archlinux.org/yay.git "$TEMP_YAY/yay"
 
         (
-            cd "$TEMP_DIR/yay"
+            cd "$TEMP_YAY/yay"
             makepkg -si --noconfirm
         )
+
+        rm -rf "$TEMP_YAY"
     fi
 
     # --------------------------------------
