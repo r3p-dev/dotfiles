@@ -170,7 +170,7 @@ if [[ -n "$FISH_PATH" ]]; then
             echo "$FISH_PATH" | sudo tee -a /etc/shells >/dev/null
         fi
 
-        sudo chsh -s "$FISH_PATH"
+        sudo chsh -s "$FISH_PATH" "$USER"
 
         echo "    -> Fish is now the default shell."
         echo "    -> Logout and login again to apply the change."
