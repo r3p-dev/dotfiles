@@ -12,6 +12,7 @@
 "Mod+N" = "spawn:noctalia msg panel-toggle control-center"
 "Mod+X" = "spawn:noctalia msg panel-toggle noctalia/notes:panel"
 "Alt+F4" = "spawn:noctalia msg panel-toggle session"
+"Print" = "spawn:noctalia msg plugin alexander/screen-toolkit:service all toggle"
 "Mod+Shift+Z" = "cheatsheet-toggle"
 
 "Mod+Q" = "window-close"
@@ -74,17 +75,6 @@
 "Mod+Space" = "scratchpad-toggle"
 "Mod+Ctrl+Space" = "window-restore-from-scratchpad"
 "Mod+Tab" = "scratchpad-focus-next"
-
-# ───────────────────────────────── Submaps ──────────────────────────────────
-"Mod+S" = { action = "submap:screencapture", repeat = false }
-"submap[screencapture],1" = { action = "spawn:grim screenshot.png", submap = "reset" }
-"submap[screencapture],2" = { action = "submap:region", repeat = false }
-"submap[screencapture],Escape" = "submap:reset"
-
-"submap[region],R" = { action = "spawn:grim -g \"$(slurp)\" screenshot.png", submap = "reset" }
-"submap[region],Escape" = "submap:reset"
-
-"Escape" = "submap:reset"
 
 # ────────────────────────────── Audio Controls ──────────────────────────────
 "XF86AudioRaiseVolume" = "spawn:wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"

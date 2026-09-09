@@ -2,13 +2,17 @@
 enable_overdrive = true
 
 [bar.default]
-center = [ "privacy", "clock", "notifications" ]
-end = [ "tray", "network", "volume", "battery", "session" ]
-margin_ends = 0
-start = [ "control-center", "workspaces", "media", "screen-toolkit" ]
+start = ["clock", "notifications", "media"]
+center = ["workspaces", "privacy"]
+end = ["tray", "network", "volume", "battery"]
+margin_ends = 350
+font_weight = 700
 
 [[control_center.shortcuts]]
-type = "clipboard"
+type = "8bury/lid-guard:lid-guard-toggle"
+
+[[control_center.shortcuts]]
+type = "caffeine"
 
 [[control_center.shortcuts]]
 type = "wallpaper"
@@ -69,9 +73,11 @@ widget_order = [ "lockscreen-login-box@eDP-1" ]
 [notification]
 layer = "overlay"
 position = "bottom_center"
+offset_y = 20
 
 [osd]
 position = "bottom_center"
+offset_y = 20
 
 [plugins]
 enabled = [
@@ -86,6 +92,9 @@ polkit_agent = true
 screen_time_enabled = true
 settings_window_translucent = true
 telemetry_enabled = true
+
+    [shell.greeter_sync]
+    auto_sync = true
 
     [shell.animation]
     enabled = false
@@ -148,9 +157,10 @@ telemetry_enabled = true
 [theme]
 source = "wallpaper"
 wallpaper_scheme = "m3-tonal-spot"
+pure_black_dark = true
 
     [theme.templates]
-    builtin_ids = [ "kitty", "umbriel" ]
+    builtin_ids = [ "kitty", "umbriel", "starship" ]
 
 [wallpaper]
 directory = "~/Pictures/Wallpapers"
@@ -159,8 +169,13 @@ transition = []
     [wallpaper.default]
     path = "/home/r3p/Pictures/Wallpapers/porsche.png"
 
-[widget.battery]
-hide_when_plugged = true
+[backdrop]
+enabled        = false
+blur_intensity = 0.5
+tint_intensity = 0.3
+
+[widget.clock]
+tooltip_format = "{:%A}\n{:%d-%m-%Y}"
 
 [widget.media]
 hide_album_art = true
@@ -168,14 +183,25 @@ hide_artist = true
 hide_when_no_media = true
 show_progress = true
 
-[widget.network]
-show_label = false
+[widget.notifications]
+hide_when_no_unread = true
 
-[widget.notes]
-type = "noctalia/notes:notes"
+[widget.workspaces]
+hide_when_empty = true
+show_labels = false
+active_pill_size = 1.5
 
 [widget.privacy]
 hide_inactive = true
 
+[widget.tray]
+drawer = true
+
+[widget.network]
+show_label = false
+
 [widget.volume]
 show_label = false
+
+[widget.battery]
+hide_when_plugged = true
