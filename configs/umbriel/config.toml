@@ -7,6 +7,7 @@ files = [
     "outputs.toml",
     "overview.toml",
     "window-rule.toml",
+    "noctalia.toml",
 ]
 
 [include.optional]
@@ -37,9 +38,8 @@ bottom = 0
 
 [layout.scrolling]
 default_width_fraction = 0.5
-center_underfull_strip = true
-center_focused = false
-expand_single_column = true
+center_underfull_strip = false
+center_focused = "never"
 
 [layout.master]
 position = "left"

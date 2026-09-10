@@ -1,0 +1,75 @@
+{
+	"logo": {
+		"type": "auto",
+		"source": "endeavouros_small",
+		"color": {
+			"1": "#ffffff",
+		},
+		"padding": {
+			"left": 2,
+			"right": 2,
+		},
+	},
+	"modules": [
+		"title",
+		"break",
+		{
+			"format": "{pretty-name}",
+			"key": "OS",
+			"type": "os",
+		},
+		{
+			"key": "Kernel",
+			"type": "kernel",
+		},
+		{
+			"format": "{pretty-name}",
+			"key": "WM",
+			"type": "wm",
+		},
+		{
+			"format": "{pretty-name}",
+			"key": "Terminal",
+			"type": "terminal",
+		},
+		{
+			"format": "{pretty-name}",
+			"key": "Shell",
+			"type": "shell",
+		},
+		{
+			"key": "Packages",
+			"type": "packages",
+		},
+		{
+			"key": "Uptime",
+			"type": "uptime",
+		},
+		{
+			"key": "CPU",
+			"type": "cpu",
+		},
+		{
+			"key": "GPU",
+			"type": "gpu",
+			"hideType": "integrated",
+		},
+		{
+			"format": "{used} / {total}",
+			"key": "RAM",
+			"type": "memory",
+		},
+		{
+			"key": "ROM",
+			"type": "disk",
+			"folders": "/",
+			"format": "{size-used} / {size-total}",
+		},
+		{
+			"format": "{pretty-name}",
+			"key": "Color",
+			"symbol": "circle",
+			"type": "colors",
+		},
+	],
+}

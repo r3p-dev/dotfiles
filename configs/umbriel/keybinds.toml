@@ -5,6 +5,7 @@
 "Mod+B" = "spawn:brave-origin"
 "Mod+I" = "spawn:librewolf"
 "Mod+K" = "spawn:zeditor"
+"Mod+Y" = "spawn:kitty -e yazi"
 
 "Mod" = "spawn:noctalia msg panel-toggle launcher"
 "Mod+V" = "spawn:noctalia msg panel-toggle clipboard"

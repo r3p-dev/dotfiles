@@ -2,10 +2,11 @@
 enable_overdrive = true
 
 [bar.default]
+position = "left"
 start = ["clock", "notifications", "media"]
 center = ["workspaces", "privacy"]
 end = ["tray", "network", "volume", "battery"]
-margin_ends = 350
+margin_ends = 0
 font_weight = 700
 
 [[control_center.shortcuts]]

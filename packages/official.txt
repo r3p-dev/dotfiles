@@ -17,6 +17,7 @@ librewolf
 mpv
 noctalia
 podman
+podman-compose
 udiskie
 udisks2
 wl-clipboard
@@ -35,3 +36,5 @@ bc
 gpu-screen-recorder
 translate-shell
 satty
+trash-cli
+gnome-keyring

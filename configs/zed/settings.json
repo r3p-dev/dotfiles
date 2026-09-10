@@ -12,6 +12,7 @@
 	},
 	"proxy": "",
 	"agent": {
+		"sidebar_side": "right",
 		"default_model": {
 			"provider": "zed.dev",
 			"model": "claude-sonnet-4-6",
@@ -99,6 +100,11 @@
 	},
 	"agent_servers": {
 		"claude-acp": {
+			"default_config_options": {
+				"effort": "high",
+				"model": "opus",
+				"mode": "auto",
+			},
 			"type": "registry",
 		},
 	},
