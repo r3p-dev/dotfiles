@@ -22,7 +22,6 @@ udiskie
 udisks2
 wl-clipboard
 spotify-launcher
-zed
 xwayland-satellite
 starship
 slurp
@@ -37,4 +36,4 @@ gpu-screen-recorder
 translate-shell
 satty
 trash-cli
-gnome-keyring
+oo7

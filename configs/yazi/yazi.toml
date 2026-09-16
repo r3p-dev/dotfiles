@@ -7,7 +7,7 @@ show_hidden = true
 
 [opener]
 edit = [
-    { run = "zeditor %s", orphan = true, desc = "Edit with Zed" },
+    { run = "code %s", orphan = true, desc = "Edit with VSCode" },
 ]
 
 image = [
