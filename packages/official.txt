@@ -37,3 +37,4 @@ satty
 trash-cli
 oo7
 libsecret
+tailscale
