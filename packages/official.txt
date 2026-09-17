@@ -36,3 +36,4 @@ translate-shell
 satty
 trash-cli
 oo7
+libsecret
