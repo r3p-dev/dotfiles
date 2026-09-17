@@ -96,26 +96,25 @@ width = 700
 [desktop_widgets]
 enabled = true
 schema_version = 2
-widget_order = [ "desktop-widget-0000000000000001" ]
+widget_order = [ "desktop-widget-1" ]
 
     [desktop_widgets.grid]
     cell_size = 16
     major_interval = 4
     visible = true
 
-    [desktop_widgets.widget.desktop-widget-0000000000000001]
+    [desktop_widgets.widget.desktop-widget-1]
     box_height = 304.0
     box_width = 304.0
     cx = 224.0
     cy = 188.0
     enabled = true
-    output = "eDP-1"
     placement_height = 1080.0
     placement_width = 1920.0
     rotation = 0.0
     type = "clock"
 
-        [desktop_widgets.widget.desktop-widget-0000000000000001.settings]
+        [desktop_widgets.widget.desktop-widget-1.settings]
         background = false
         clock_style = "analog"
 
@@ -261,26 +260,25 @@ wallpaper = ""
 [lockscreen_widgets]
 enabled = false
 schema_version = 2
-widget_order = [ "lockscreen-login-box@eDP-1" ]
+widget_order = [ "lockscreen-login-box" ]
 
     [lockscreen_widgets.grid]
     cell_size = 16
     major_interval = 4
     visible = true
 
-    [lockscreen_widgets.widget."lockscreen-login-box@eDP-1"]
+    [lockscreen_widgets.widget."lockscreen-login-box"]
     box_height = 196.0
     box_width = 810.0
     cx = 960.0
     cy = 898.0
     enabled = true
-    output = "eDP-1"
     placement_height = 1080.0
     placement_width = 1920.0
     rotation = 0.0
     type = "login_box"
 
-        [lockscreen_widgets.widget."lockscreen-login-box@eDP-1".settings]
+        [lockscreen_widgets.widget."lockscreen-login-box".settings]
         background_color = "surface_variant"
         background_opacity = 0.88
         background_radius = 12.0
