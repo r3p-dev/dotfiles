@@ -22,25 +22,25 @@ offset_x = 2
 offset_y = 2
 
 [colors]
-background = "#141419FF"
-text_primary = "#E8E8EAFF"
-text_muted = "#8A8A92FF"
-accent_primary = "#7AA3FFFF"
-accent_secondary = "#F5C96BFF"
-warning = "#F5C96BFF"
-error = "#FF6B6BFF"
-insert_hint = "#7FC8FF80"
-backdrop = "#000000FF"
+background = "#0f1516FF"
+text_primary = "#dee3e5FF"
+text_muted = "#bfc8caFF"
+accent_primary = "#82d3e2FF"
+accent_secondary = "#b1cbd0FF"
+warning = "#bbc5eaFF"
+error = "#ffb4abFF"
+insert_hint = "#bbc5ea80"
+backdrop = "#323b3dFF"
 shadow = "#0000007F"
 
 [colors.border]
-focused = "#7AA3FFFF"
-unfocused = "#292933FF"
-scratchpad_focused = "#E5C07BFF"
-scratchpad_unfocused = "#5C4A2AFF"
-outer = "#1A1A1FFF"
+focused = "#82d3e2FF"
+unfocused = "#323b3dFF"
+scratchpad_focused = "#bbc5eaFF"
+scratchpad_unfocused = "#3c4665FF"
+outer = "#000000FF"
 
 [colors.overview]
-background_tint = "#10101430"
+background_tint = "#00000088"
 workspace_background = "#00000044"
 badge = "#7AA3FFFF"
