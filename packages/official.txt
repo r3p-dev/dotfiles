@@ -13,7 +13,6 @@ fzf
 zoxide
 resvg
 imagemagick
-librewolf
 mpv
 noctalia
 podman
