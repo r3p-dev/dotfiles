@@ -4,10 +4,8 @@ files = [
     "appearance.toml",
     "input.toml",
     "keybinds.toml",
-    "outputs.toml",
     "overview.toml",
     "window-rule.toml",
-    "noctalia.toml",
 ]
 
 [include.optional]
