@@ -589,7 +589,7 @@ wallpaper_scheme = "m3-tonal-spot"
     enable_community_templates = true
 
 [wallpaper]
-directory = "/home/r3p/Pictures/Wallpapers"
+directory = "~/Pictures/Wallpapers"
 directory_dark = ""
 directory_light = ""
 edge_smoothness = 0.30000001192092896
