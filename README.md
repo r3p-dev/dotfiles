@@ -25,7 +25,7 @@ The installer downloads the repository temporarily and removes it when finished.
 
 ## Repository Structure
 
-```
+```text
 .
 ├── configs/
 │   └── ...
@@ -40,7 +40,7 @@ The installer downloads the repository temporarily and removes it when finished.
 
 Contains configuration files and directories that are copied to:
 
-```
+```text
 ~/.config/
 ```
 
