@@ -1,0 +1,22 @@
+[Unit]
+Description=PostgreSQL 17 (development)
+
+[Container]
+Image=docker.io/library/postgres:17
+ContainerName=postgres
+Environment=POSTGRES_USER=user
+Environment=POSTGRES_PASSWORD=password
+Environment=TZ=Asia/Jakarta
+Environment=PGTZ=Asia/Jakarta
+PublishPort=127.0.0.1:5432:5432
+Volume=postgres_data:/var/lib/postgresql/data
+HealthCmd=pg_isready -U user -d postgres
+HealthInterval=10s
+HealthTimeout=5s
+HealthRetries=5
+
+[Service]
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

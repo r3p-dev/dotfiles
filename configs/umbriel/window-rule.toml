@@ -5,12 +5,12 @@ blur_optimized = true
 [[window_rule]]
 match.app_id = "^dev.noctalia.Noctalia$"
 default_floating = true
-default_size = [1020, 900]
+default_floating_size_px = { width = 1920, height = 900}
 
 [[window_rule]]
 match.app_id = "^dev.noctalia.UmbrielSharePicker$"
 default_floating = true
-default_size = [800, 600]
+default_floating_size_px = { width = 800, height = 600}
 
 [[window_rule]]
 match.title = "^(Picture-in-Picture|Picture in picture)$"

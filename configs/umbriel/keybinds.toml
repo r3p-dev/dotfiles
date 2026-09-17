@@ -47,15 +47,15 @@
 "Mod+O" = { action = "overview-toggle", repeat = false }
 
 # ─────────────────────────── Window Size & Resize ───────────────────────────
-"Mod+R" = "window-cycle-width"
-"Mod+Shift+R" = "window-cycle-width-back"
-"Mod+Alt+R" = "window-cycle-height"
-"Mod+Alt+Shift+R" = "window-cycle-height-back"
+"Mod+R" = "window-cycle-primary-extent"
+"Mod+Shift+R" = "window-cycle-primary-extent-back"
+"Mod+Alt+R" = "window-cycle-secondary-extent"
+"Mod+Alt+Shift+R" = "window-cycle-secondary-extent-back"
 
-"Mod+Minus" = "window-modify-width:-0.1"
-"Mod+Equal" = "window-modify-width:0.1"
-"Mod+Alt+Minus" = "window-modify-height:-0.1"
-"Mod+Alt+Equal" = "window-modify-height:0.1"
+"Mod+Minus" = "window-modify-primary-extent:-0.1"
+"Mod+Equal" = "window-modify-primary-extent:0.1"
+"Mod+Alt+Minus" = "window-modify-secondary-extent:-0.1"
+"Mod+Alt+Equal" = "window-modify-secondary-extent:0.1"
 
 # ───────────────────────────── Window Consume / Expel ───────────────────────
 "Mod+Comma" = "window-consume-left"
