@@ -2,7 +2,8 @@
 set -euo pipefail
 
 # ==========================================
-# Dotfiles installer for EndeavourOS / Arch
+# Dotfiles installer
+# Arch / EndeavourOS  +  Fedora
 # ==========================================
 
 REPO="https://github.com/r3p-dev/dotfiles/archive/refs/heads/main.tar.gz"
@@ -22,20 +23,48 @@ SCRIPT_DIR="$TEMP_DIR/dotfiles-main"
 
 OFFICIAL_PACKAGES="$SCRIPT_DIR/packages/official.txt"
 AUR_PACKAGES="$SCRIPT_DIR/packages/aur.txt"
+FEDORA_PACKAGES="$SCRIPT_DIR/packages/fedora.txt"
+FEDORA_BASE_PACKAGES="$SCRIPT_DIR/packages/fedora-base.txt"
 CONFIGS_DIR="$SCRIPT_DIR/configs"
+
+MISSING_PACKAGES=()
 
 echo "==> Dotfiles installer"
 echo "==> Source: GitHub"
 echo
 
 # ------------------------------------------
-# Check OS
+# Detect distro
 # ------------------------------------------
 
-if [[ ! -f /etc/arch-release ]]; then
-    echo "ERROR: This script is intended for Arch-based systems."
+if [[ ! -f /etc/os-release ]]; then
+    echo "ERROR: /etc/os-release not found. Unsupported system."
     exit 1
 fi
+
+# shellcheck disable=SC1091
+. /etc/os-release
+
+DISTRO=""
+
+case "$ID" in
+    arch | endeavouros | cachyos) DISTRO="arch" ;;
+    fedora) DISTRO="fedora" ;;
+    *)
+        case "${ID_LIKE:-}" in
+            *arch*) DISTRO="arch" ;;
+            *fedora*) DISTRO="fedora" ;;
+        esac
+        ;;
+esac
+
+if [[ -z "$DISTRO" ]]; then
+    echo "ERROR: Unsupported distribution: $ID"
+    echo "ERROR: This script supports Arch-based and Fedora systems."
+    exit 1
+fi
+
+echo "==> Detected: $PRETTY_NAME ($DISTRO)"
 
 # ------------------------------------------
 # Check sudo
@@ -47,35 +76,46 @@ if ! command -v sudo &>/dev/null; then
 fi
 
 # ------------------------------------------
-# Update system
+# Read a package list into an array
 # ------------------------------------------
 
-echo "==> Updating system..."
-sudo pacman -Syu --noconfirm
+read_package_list() {
+    local file="$1"
 
-# ------------------------------------------
-# Install official packages
-# ------------------------------------------
+    [[ -f "$file" ]] || return 1
 
-if [[ -f "$OFFICIAL_PACKAGES" ]]; then
-    echo "==> Installing official packages..."
+    grep -vE '^[[:space:]]*(#|$)' "$file" | sed 's/[[:space:]]*#.*$//'
+}
 
-    mapfile -t OFFICIAL < <(
-        grep -vE '^[[:space:]]*(#|$)' "$OFFICIAL_PACKAGES"
-    )
+# ==========================================
+# Arch branch
+# ==========================================
 
-    if ((${#OFFICIAL[@]} > 0)); then
-        sudo pacman -S --needed --noconfirm "${OFFICIAL[@]}"
+install_arch() {
+    echo "==> Updating system..."
+    sudo pacman -Syu --noconfirm
+
+    # --------------------------------------
+    # Official packages
+    # --------------------------------------
+
+    if [[ -f "$OFFICIAL_PACKAGES" ]]; then
+        echo "==> Installing official packages..."
+
+        mapfile -t OFFICIAL < <(read_package_list "$OFFICIAL_PACKAGES")
+
+        if ((${#OFFICIAL[@]} > 0)); then
+            sudo pacman -S --needed --noconfirm "${OFFICIAL[@]}"
+        fi
+    else
+        echo "WARNING: $OFFICIAL_PACKAGES not found."
     fi
-else
-    echo "WARNING: $OFFICIAL_PACKAGES not found."
-fi
 
-# ------------------------------------------
-# Install AUR helper
-# ------------------------------------------
+    # --------------------------------------
+    # AUR helper
+    # --------------------------------------
 
-if [[ -f "$AUR_PACKAGES" ]]; then
+    [[ -f "$AUR_PACKAGES" ]] || return 0
 
     if ! command -v yay &>/dev/null; then
         echo "==> yay is not installed."
@@ -94,21 +134,160 @@ if [[ -f "$AUR_PACKAGES" ]]; then
     fi
 
     # --------------------------------------
-    # Install AUR packages
+    # AUR packages
     # --------------------------------------
 
     echo "==> Installing AUR packages..."
 
-    mapfile -t AUR < <(
-        grep -vE '^[[:space:]]*(#|$)' "$AUR_PACKAGES"
-    )
+    mapfile -t AUR < <(read_package_list "$AUR_PACKAGES")
 
     if ((${#AUR[@]} > 0)); then
         yay -S --needed --noconfirm "${AUR[@]}"
     fi
-else
-    echo "WARNING: $AUR_PACKAGES not found."
-fi
+}
+
+# ==========================================
+# Fedora branch
+# ==========================================
+
+dnf_install() {
+    # Coba sekali jalan dulu. Kalau ada satu nama paket yang tidak
+    # tersedia dnf membatalkan seluruh transaksi, jadi fallback-nya
+    # pasang satu per satu dan catat yang gagal.
+
+    if sudo dnf install -y "$@"; then
+        return 0
+    fi
+
+    echo "==> Falling back to per-package installation..."
+
+    local pkg
+
+    for pkg in "$@"; do
+        if ! sudo dnf install -y "$pkg"; then
+            MISSING_PACKAGES+=("$pkg")
+        fi
+    done
+}
+
+add_repo_file() {
+    local url="$1"
+
+    sudo dnf config-manager addrepo --from-repofile="$url" 2>/dev/null
+}
+
+install_fedora() {
+    echo "==> Updating system..."
+    sudo dnf upgrade -y --refresh
+
+    # --------------------------------------
+    # RPM Fusion (ffmpeg, codec)
+    # --------------------------------------
+
+    echo "==> Enabling RPM Fusion..."
+
+    sudo dnf install -y \
+        "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$VERSION_ID.noarch.rpm" \
+        "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$VERSION_ID.noarch.rpm" ||
+        echo "WARNING: RPM Fusion setup failed; ffmpeg/mpv may be limited."
+
+    # --------------------------------------
+    # Codec
+    # --------------------------------------
+
+    echo "==> Swapping to full ffmpeg..."
+ 
+    sudo dnf swap -y ffmpeg-free ffmpeg --allowerasing ||
+        echo "WARNING: ffmpeg swap failed; codec support will be limited."
+ 
+    echo "==> Installing multimedia groups..."
+ 
+    sudo dnf group upgrade -y multimedia \
+        --setopt="install_weak_deps=False" \
+        --exclude=PackageKit-gstreamer-plugin ||
+        echo "WARNING: multimedia group upgrade failed."
+ 
+    sudo dnf group upgrade -y sound-and-video ||
+        echo "WARNING: sound-and-video group upgrade failed."
+
+    # --------------------------------------
+    # Terra (umbriel-nightly, noctalia-greeter)
+    # --------------------------------------
+
+    echo "==> Enabling Terra..."
+
+    sudo dnf install -y --nogpgcheck \
+        --repofrompath 'terra,https://repos.fyralabs.com/terra$releasever' \
+        terra-release ||
+        echo "WARNING: Terra setup failed; umbriel/noctalia-greeter will be missing."
+
+    # --------------------------------------
+    # Vendor repos
+    # --------------------------------------
+
+    echo "==> Adding vendor repositories..."
+
+    if [[ ! -f /etc/yum.repos.d/brave-browser.repo ]]; then
+        add_repo_file https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo ||
+            echo "WARNING: Brave repository setup failed."
+    fi
+
+    if [[ ! -f /etc/yum.repos.d/vscode.repo ]]; then
+        sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc || true
+
+        sudo tee /etc/yum.repos.d/vscode.repo >/dev/null <<'EOF'
+[code]
+name=Visual Studio Code
+baseurl=https://packages.microsoft.com/yumrepos/vscode
+enabled=1
+autorefresh=1
+type=rpm-md
+gpgcheck=1
+gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+EOF
+    fi
+
+    if [[ ! -f /etc/yum.repos.d/tailscale.repo ]]; then
+        add_repo_file https://pkgs.tailscale.com/stable/fedora/tailscale.repo ||
+            echo "WARNING: Tailscale repository setup failed."
+    fi
+
+    # --------------------------------------
+    # Packages
+    # --------------------------------------
+
+    if [[ -f "$FEDORA_BASE_PACKAGES" ]]; then
+        echo "==> Installing base system packages..."
+
+        mapfile -t FEDORA_BASE < <(read_package_list "$FEDORA_BASE_PACKAGES")
+
+        if ((${#FEDORA_BASE[@]} > 0)); then
+            dnf_install "${FEDORA_BASE[@]}"
+        fi
+    fi 
+
+    
+    if [[ -f "$FEDORA_PACKAGES" ]]; then
+        echo "==> Installing packages..."
+ 
+        mapfile -t FEDORA < <(read_package_list "$FEDORA_PACKAGES")
+ 
+        if ((${#FEDORA[@]} > 0)); then
+            dnf_install "${FEDORA[@]}"
+        fi
+    else
+        echo "WARNING: $FEDORA_PACKAGES not found."
+    fi
+}
+
+# ------------------------------------------
+# Run the branch for this distro
+# ------------------------------------------
+
+case "$DISTRO" in
+    arch) install_arch ;;
+    fedora) install_fedora ;;
+esac
 
 # ------------------------------------------
 # Setup Noctalia greeter (greetd)
@@ -170,10 +349,14 @@ if [[ -n "$FISH_PATH" ]]; then
             echo "$FISH_PATH" | sudo tee -a /etc/shells >/dev/null
         fi
 
-        sudo chsh -s "$FISH_PATH" "$USER"
+        if command -v chsh &>/dev/null; then
+            sudo chsh -s "$FISH_PATH" "$USER"
 
-        echo "    -> Fish is now the default shell."
-        echo "    -> Logout and login again to apply the change."
+            echo "    -> Fish is now the default shell."
+            echo "    -> Logout and login again to apply the change."
+        else
+            echo "WARNING: chsh not found (install util-linux-user on Fedora)."
+        fi
     else
         echo "==> Fish is already the default shell."
     fi
@@ -227,6 +410,17 @@ echo
 echo "=========================================="
 echo " Dotfiles installation complete!"
 echo "=========================================="
+
+if ((${#MISSING_PACKAGES[@]} > 0)); then
+    echo
+    echo "==> These packages could not be installed:"
+
+    for pkg in "${MISSING_PACKAGES[@]}"; do
+        echo "    - $pkg"
+    done
+
+    echo "==> Install them manually (cargo, flatpak, or another repo)."
+fi
 
 if ((REBOOT_REQUIRED)); then
     echo
