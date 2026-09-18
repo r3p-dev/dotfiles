@@ -15,18 +15,6 @@ cleanup() {
 
 trap cleanup EXIT
 
-echo "==> Downloading dotfiles..."
-
-curl -fsSL "$REPO" | tar -xz -C "$TEMP_DIR"
-
-SCRIPT_DIR="$TEMP_DIR/dotfiles-main"
-
-OFFICIAL_PACKAGES="$SCRIPT_DIR/packages/official.txt"
-AUR_PACKAGES="$SCRIPT_DIR/packages/aur.txt"
-FEDORA_PACKAGES="$SCRIPT_DIR/packages/fedora.txt"
-FEDORA_BASE_PACKAGES="$SCRIPT_DIR/packages/fedora-base.txt"
-CONFIGS_DIR="$SCRIPT_DIR/configs"
-
 MISSING_PACKAGES=()
 
 echo "==> Dotfiles installer"
@@ -74,6 +62,44 @@ if ! command -v sudo &>/dev/null; then
     echo "ERROR: sudo is not installed."
     exit 1
 fi
+
+# ------------------------------------------
+# Bootstrap tools
+# ------------------------------------------
+#
+# Minimal Install Fedora (@core) tidak membawa tar maupun git, jadi
+# keduanya harus ada sebelum tarball diunduh -- bukan sesudahnya.
+
+BOOTSTRAP_TOOLS=()
+
+for tool in curl tar git; do
+    command -v "$tool" &>/dev/null || BOOTSTRAP_TOOLS+=("$tool")
+done
+
+if ((${#BOOTSTRAP_TOOLS[@]} > 0)); then
+    echo "==> Installing bootstrap tools: ${BOOTSTRAP_TOOLS[*]}"
+
+    case "$DISTRO" in
+        arch) sudo pacman -Sy --needed --noconfirm "${BOOTSTRAP_TOOLS[@]}" ;;
+        fedora) sudo dnf install -y "${BOOTSTRAP_TOOLS[@]}" ;;
+    esac
+fi
+
+# ------------------------------------------
+# Download dotfiles
+# ------------------------------------------
+
+echo "==> Downloading dotfiles..."
+
+curl -fsSL "$REPO" | tar -xz -C "$TEMP_DIR"
+
+SCRIPT_DIR="$TEMP_DIR/dotfiles-main"
+
+OFFICIAL_PACKAGES="$SCRIPT_DIR/packages/official.txt"
+AUR_PACKAGES="$SCRIPT_DIR/packages/aur.txt"
+FEDORA_PACKAGES="$SCRIPT_DIR/packages/fedora.txt"
+FEDORA_BASE_PACKAGES="$SCRIPT_DIR/packages/fedora-base.txt"
+CONFIGS_DIR="$SCRIPT_DIR/configs"
 
 # ------------------------------------------
 # Read a package list into an array
@@ -171,9 +197,12 @@ dnf_install() {
 }
 
 add_repo_file() {
+    # dnf5 (Fedora 41+) memakai "addrepo", dnf4 memakai "--add-repo".
+
     local url="$1"
 
-    sudo dnf config-manager addrepo --from-repofile="$url" 2>/dev/null
+    sudo dnf config-manager addrepo --from-repofile="$url" 2>/dev/null ||
+        sudo dnf config-manager --add-repo "$url"
 }
 
 install_fedora() {
@@ -194,19 +223,24 @@ install_fedora() {
     # --------------------------------------
     # Codec
     # --------------------------------------
+    #
+    # Fedora mengirim ffmpeg-free yang dipangkas (tanpa H.264/H.265/AAC).
+    # Paket penuh dari RPM Fusion bentrok dengannya, jadi harus 'swap',
+    # bukan 'install' -- itu sebabnya ffmpeg tidak ada di fedora.txt.
+    # Grup multimedia menyusul supaya plugin GStreamer ikut lengkap.
 
     echo "==> Swapping to full ffmpeg..."
- 
+
     sudo dnf swap -y ffmpeg-free ffmpeg --allowerasing ||
         echo "WARNING: ffmpeg swap failed; codec support will be limited."
- 
+
     echo "==> Installing multimedia groups..."
- 
+
     sudo dnf group upgrade -y multimedia \
         --setopt="install_weak_deps=False" \
         --exclude=PackageKit-gstreamer-plugin ||
         echo "WARNING: multimedia group upgrade failed."
- 
+
     sudo dnf group upgrade -y sound-and-video ||
         echo "WARNING: sound-and-video group upgrade failed."
 
@@ -256,6 +290,9 @@ EOF
     # Packages
     # --------------------------------------
 
+    # Base system hanya dipasang di instalasi minimal; di Workstation
+    # semuanya sudah ada dan dnf akan melewatinya.
+
     if [[ -f "$FEDORA_BASE_PACKAGES" ]]; then
         echo "==> Installing base system packages..."
 
@@ -264,14 +301,13 @@ EOF
         if ((${#FEDORA_BASE[@]} > 0)); then
             dnf_install "${FEDORA_BASE[@]}"
         fi
-    fi 
+    fi
 
-    
     if [[ -f "$FEDORA_PACKAGES" ]]; then
         echo "==> Installing packages..."
- 
+
         mapfile -t FEDORA < <(read_package_list "$FEDORA_PACKAGES")
- 
+
         if ((${#FEDORA[@]} > 0)); then
             dnf_install "${FEDORA[@]}"
         fi
