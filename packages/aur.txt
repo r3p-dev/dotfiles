@@ -1,5 +1,0 @@
-brave-origin-bin
-noctalia-greeter
-umbriel-git
-wl-screenrec
-visual-studio-code-bin

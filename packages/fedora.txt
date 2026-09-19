@@ -29,7 +29,6 @@ slurp
 hyprpicker
 satty
 gpu-screen-recorder
-wl-screenrec
 udiskie
 udisks2
 tesseract
@@ -39,7 +38,7 @@ zbar
 podman
 podman-compose
 code
-oo7
+gnome-keyring
 libsecret
 tailscale
 brave-browser
