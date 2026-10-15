@@ -67,14 +67,18 @@ curl -fsSL https://dotfiles.r3p.dev/vps-setup.sh |
   USER_NAME=admin GITHUB_OWNER=your-github ACME_EMAIL=you@example.org SSH_PORT=2222 bash -s -- --yes
 ```
 
-Or bring a complete config file, which skips the questions:
+Or bring a complete config file, which skips the questions: a `vps.conf` in the current directory is picked up by
+itself, and any other file is given with `--config`:
 
 ```bash
-curl -fsSL https://dotfiles.r3p.dev/vps-setup.sh | bash -s -- --config ./vps.conf
+curl -fsSL https://dotfiles.r3p.dev/vps-setup.sh | bash -s -- --config ~/my-vps.conf
 ```
 
 The settings are saved to `/etc/vps/vps.conf` and the script installs itself as `/usr/local/bin/vps`. To change
 something later, edit that file and run `sudo vps init`; nothing has to be downloaded again.
+
+To update the script on a server that is already set up, run the same command. It finds `/etc/vps/vps.conf`, asks
+nothing, and re-runs `init` with the saved settings (a `./vps.conf` is still layered on top, so remove a stale one).
 
 To read the script before running it, download it first. `vps.conf` in this repository is the same template that
 `config-example` prints:

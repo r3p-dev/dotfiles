@@ -29,7 +29,7 @@ set -Eeuo pipefail
 shopt -s inherit_errexit nullglob
 umask 022
 
-readonly VPS_VERSION="1.2.3"
+readonly VPS_VERSION="1.2.4"
 readonly INSTALL_PATH="/usr/local/bin/vps"
 readonly CONFIG_DIR="/etc/vps"
 readonly CONFIG_PATH="$CONFIG_DIR/vps.conf"
@@ -855,7 +855,7 @@ http:
         contentTypeNosniff: true
         customFrameOptionsValue: SAMEORIGIN
         referrerPolicy: strict-origin-when-cross-origin
-        permissionsPolicy: "camera=(), microphone=(), geolocation=(), payment=()"
+        # Permissions-Policy is set per app (DEFAULT_HEADERS), so vps.headers can replace it
         customResponseHeaders:
           Server: ""
           X-Powered-By: ""
@@ -1298,6 +1298,9 @@ def warn(msg):
 SERVICE_RE = re.compile(r"^[a-z][a-z0-9-]{0,30}$")
 VOLUME_RE = re.compile(r"^[a-z0-9][a-z0-9_.-]{0,62}$")
 HEADER_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9-]{0,63}$")
+# Sent per app rather than from secure@file: entrypoint middlewares run outermost and would
+# override an app's own value, so an app that needs the camera (etc.) could never allow it.
+DEFAULT_HEADERS = {"Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()"}
 DOMAIN_RE = re.compile(r"^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{0,61}[a-z0-9]$")
 IMAGE_RE = re.compile(r"^[a-z0-9]([a-z0-9.-]*[a-z0-9])?(:[0-9]{1,5})?/[a-z0-9]+([._/-][a-z0-9]+)*"
                       r"(:[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})?(@sha256:[a-f0-9]{64})?$")
@@ -1663,10 +1666,12 @@ def transform(gen_dir, out_dir, meta_path, project, defaults, taken_path):
                     f"Label=traefik.http.routers.{unit}.entrypoints=websecure",
                     f"Label=traefik.http.routers.{unit}.tls.certresolver=le",
                     f"Label=traefik.http.routers.{unit}.service={unit}"]
-            if headers:
-                for header, value in headers.items():
-                    out.append(label(f"traefik.http.middlewares.{unit}-headers.headers.customresponseheaders.{header}", value))
-                out.append(f"Label=traefik.http.routers.{unit}.middlewares={unit}-headers")
+            # vps.headers.NAME replaces a default header of the same name (names are case-insensitive)
+            own = {header.lower() for header in headers}
+            headers = {**{h: v for h, v in DEFAULT_HEADERS.items() if h.lower() not in own}, **headers}
+            for header, value in headers.items():
+                out.append(label(f"traefik.http.middlewares.{unit}-headers.headers.customresponseheaders.{header}", value))
+            out.append(f"Label=traefik.http.routers.{unit}.middlewares={unit}-headers")
             if redirects:
                 # vps.redirect: these hosts answer with a 301 to the first vps.domain
                 rule = " || ".join(f"Host(`{d}`)" for d in redirects)
@@ -2452,7 +2457,8 @@ cmd_compose_example() {
 #   image: ${IMAGE}      the image GitHub Actions just built (pinned by digest)
 #   vps.domain/vps.port  public HTTPS through Traefik (Let's Encrypt, HTTP/3)
 #   vps.redirect         other hosts that 301-redirect to the first vps.domain
-#   vps.headers.NAME     extra response headers, e.g. Content-Security-Policy
+#   vps.headers.NAME     extra response headers, e.g. Content-Security-Policy, or a
+#                        Permissions-Policy replacing the default (camera=(), ...)
 #   service names        are hostnames on the app's private network (DB_HOST: db)
 #   secrets              NOT here: `vps env myapp KEY=VALUE` on the server
 #                        (one .env per app, given to every service)
@@ -2578,7 +2584,8 @@ compose.yaml rules:
   image: \${IMAGE}                the image built by CI
   labels: vps.domain + vps.port   public HTTPS (several domains: a.com,www.a.com)
           vps.redirect            hosts that 301-redirect to the first vps.domain
-          vps.headers.NAME        extra response header (e.g. Content-Security-Policy)
+          vps.headers.NAME        extra response header (e.g. Content-Security-Policy);
+                                  Permissions-Policy replaces the default (camera=(), ...)
   named volumes only; no ports, privileged, bind mounts or \${VAR} (use vps env)
 EOF
 }
@@ -2623,10 +2630,14 @@ main() {
 
 # Piped: `curl -fsSL https://dotfiles.r3p.dev/vps-setup.sh | bash`. There is no
 # file to install as `vps` and stdin is the script itself, so download the
-# script, build a vps.conf from the environment and questions on the terminal,
-# and run init from there. Nothing personal is downloaded: every setting comes
-# from whoever runs it. Extra args go to init (`| bash -s -- --yes`), and
-# `--config FILE` skips the questions and uses that file.
+# script, build a vps.conf and run init from there. Nothing personal is
+# downloaded: every setting comes from whoever runs it. Extra args go to init
+# (`| bash -s -- --yes`). Settings come from the first that exists:
+#   --config FILE         that file, as given
+#   ./vps.conf            layered over /etc/vps/vps.conf when the server has one
+#   /etc/vps/vps.conf     an update: nothing to ask
+#   questions             a fresh server, on the terminal
+# Exported settings are added on top of all but --config.
 
 # Ask for one setting unless the environment already has it.
 ask_setting() {
@@ -2666,21 +2677,32 @@ bootstrap_from_pipe() {
     if [[ $arg == --config || $arg == -c ]]; then has_config=1; fi
   done
   if ((has_config == 0)); then
-    step "Settings (saved to $CONFIG_PATH; change them later with: sudo vps init)"
-    ask_setting USER_NAME "Your login name on the server" "" required
-    ask_setting SSH_PUBLIC_KEY "SSH public key (empty = the key you logged in with)"
-    ask_setting SSH_PORT "SSH port" 22
-    ask_setting TIMEZONE "Timezone" UTC
-    ask_setting ACME_EMAIL "E-mail for Let's Encrypt" "" required
-    ask_setting GITHUB_OWNER "GitHub user or org that may deploy (ghcr.io/<owner>/*)" "" required
-    # Every setting that is set (asked above, or exported) goes into the file;
-    # the rest keep their defaults.
+    : >"$dir/vps.conf"
+    if [[ -f vps.conf ]]; then
+      [[ -r vps.conf ]] || die "cannot read $PWD/vps.conf"
+      step "Settings from $PWD/vps.conf$([[ -f $CONFIG_PATH ]] && echo " (over $CONFIG_PATH)")"
+      # A last line without a newline would run into the first exported setting
+      { cat vps.conf; printf '\n'; } >"$dir/vps.conf"
+    elif [[ -f $CONFIG_PATH ]]; then
+      step "Settings from $CONFIG_PATH (change them with: sudo vps init)"
+    else
+      step "Settings (saved to $CONFIG_PATH; change them later with: sudo vps init)"
+      ask_setting USER_NAME "Your login name on the server" "" required
+      ask_setting SSH_PUBLIC_KEY "SSH public key (empty = the key you logged in with)"
+      ask_setting SSH_PORT "SSH port" 22
+      ask_setting TIMEZONE "Timezone" UTC
+      ask_setting ACME_EMAIL "E-mail for Let's Encrypt" "" required
+      ask_setting GITHUB_OWNER "GitHub user or org that may deploy (ghcr.io/<owner>/*)" "" required
+    fi
+    # Every setting that is set (asked above, or exported) goes into the file,
+    # after ./vps.conf so it wins; the rest keep their saved values or defaults.
     for key in "${CONFIG_KEYS[@]}"; do
       if [[ ! -v $key ]]; then continue; fi
       [[ ${!key} != *[$'"\n']* ]] || die "$key cannot contain a double quote or a newline"
       printf '%s="%s"\n' "$key" "${!key}"
-    done >"$dir/vps.conf"
-    args+=(--config "$dir/vps.conf")
+    done >>"$dir/vps.conf"
+    # Empty: an update with nothing to change, and init reads $CONFIG_PATH itself
+    if [[ -s $dir/vps.conf ]]; then args+=(--config "$dir/vps.conf"); fi
   fi
 
   "${run[@]}" bash "$dir/vps-setup.sh" init "${args[@]}" <"$tty" || rc=$?
