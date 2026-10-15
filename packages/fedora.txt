@@ -1,44 +1,67 @@
-fish
-util-linux-user
-starship
-fastfetch
+# Desktop
+umbriel-nightly
+noctalia
+noctalia-greeter
+greetd
+xwayland-satellite
+
+# Terminal and shell
 kitty
+fish
+starship
+zoxide
+fastfetch
 yazi
+
+# CLI tools
+git
+curl
+wget
+rsync
 jq
 bc
 fd-find
 ripgrep
 fzf
-zoxide
-trash-cli
+7zip
+unzip
 translate-shell
 poppler-utils
-7zip
 ImageMagick
 resvg
-imv
-mpv
-noctalia
-umbriel-nightly
-noctalia-greeter
-greetd
-xwayland-satellite
+git-filter-repo
+
+# Screenshots, recording, OCR (Noctalia screen toolkit)
 wl-clipboard
-grim
 slurp
 hyprpicker
-satty
 gpu-screen-recorder
-udiskie
-udisks2
 tesseract
 tesseract-langpack-eng
 tesseract-langpack-ind
 zbar
+
+# Media and devices
+imv
+mpv
+mpv-mpris
+gphoto2
+udisks2
+
+# Development
 podman
 podman-compose
+gcc
+gcc-c++
+make
+clang
+ffmpeg-devel    # wl-screenrec (packages/cargo.txt)
+libdrm-devel    # wl-screenrec
 code
+gh
+cloudflared
+
+# Apps
+brave-origin
 gnome-keyring
 libsecret
-tailscale
-brave-browser

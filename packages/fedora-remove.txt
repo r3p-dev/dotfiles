@@ -1,0 +1,31 @@
+# GNOME apps from Fedora Workstation that Umbriel and Noctalia replace,
+# or that I don't use. Removed before anything is installed.
+gnome-software
+gnome-tour
+gnome-contacts
+gnome-clocks
+gnome-calendar
+gnome-weather
+gnome-maps
+gnome-boxes
+gnome-font-viewer
+gnome-characters
+gnome-system-monitor
+gnome-calculator
+gnome-text-editor
+gnome-connections
+gnome-user-docs
+mediawriter
+malcontent-control
+yelp
+ptyxis
+showtime
+loupe
+decibels
+papers
+papers-previewer
+papers-nautilus
+evince-djvu
+simple-scan
+libreoffice*
+fedora-workstation-repositories

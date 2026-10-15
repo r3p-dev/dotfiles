@@ -11,7 +11,7 @@ edit = [
 ]
 
 image = [
-    { run = "imv %s", orphan = true, desc = "Open with imv" },
+    { run = "imv-dir %s", orphan = true, desc = "Open with imv" },
 ]
 
 video = [

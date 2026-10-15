@@ -1,0 +1,3 @@
+# Installed with `cargo install --locked` after rustup.
+# Needs ffmpeg-devel, libdrm-devel and clang from packages/fedora.txt.
+wl-screenrec

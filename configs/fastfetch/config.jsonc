@@ -2,13 +2,10 @@
 	"logo": {
 		"type": "builtin",
 		"source": "small",
-		"color": {
-			"1": "#ffffff",
-		},
 		"padding": {
 			"left": 2,
-			"right": 2,
-		},
+			"right": 2
+		}
 	},
 	"modules": [
 		"title",
@@ -16,60 +13,60 @@
 		{
 			"format": "{pretty-name}",
 			"key": "OS",
-			"type": "os",
+			"type": "os"
 		},
 		{
 			"key": "Kernel",
-			"type": "kernel",
+			"type": "kernel"
 		},
 		{
 			"format": "{pretty-name}",
 			"key": "WM",
-			"type": "wm",
+			"type": "wm"
 		},
 		{
 			"format": "{pretty-name}",
 			"key": "Terminal",
-			"type": "terminal",
+			"type": "terminal"
 		},
 		{
 			"format": "{pretty-name}",
 			"key": "Shell",
-			"type": "shell",
+			"type": "shell"
 		},
 		{
 			"key": "Packages",
-			"type": "packages",
+			"type": "packages"
 		},
 		{
 			"key": "Uptime",
-			"type": "uptime",
+			"type": "uptime"
 		},
 		{
 			"key": "CPU",
-			"type": "cpu",
+			"type": "cpu"
 		},
 		{
 			"key": "GPU",
 			"type": "gpu",
-			"hideType": "integrated",
+			"hideType": "integrated"
 		},
 		{
 			"format": "{used} / {total}",
 			"key": "RAM",
-			"type": "memory",
+			"type": "memory"
 		},
 		{
 			"key": "ROM",
 			"type": "disk",
 			"folders": "/",
-			"format": "{size-used} / {size-total}",
+			"format": "{size-used} / {size-total}"
 		},
 		{
 			"format": "{pretty-name}",
 			"key": "Color",
 			"symbol": "circle",
-			"type": "colors",
-		},
-	],
+			"type": "colors"
+		}
+	]
 }

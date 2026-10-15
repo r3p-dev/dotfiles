@@ -6,11 +6,12 @@
 "Mod+I" = "spawn:firefox"
 "Mod+K" = "spawn:code"
 "Mod+Y" = "spawn:kitty -e yazi"
+"Mod+N" = "spawn:nautilus"
 
 "Mod" = "spawn:noctalia msg panel-toggle launcher"
 "Mod+V" = "spawn:noctalia msg panel-toggle clipboard"
 "Mod+Z" = "spawn:noctalia msg panel-toggle launcher /emo"
-"Mod+N" = "spawn:noctalia msg panel-toggle control-center"
+"Mod+Ctrl+N" = "spawn:noctalia msg panel-toggle control-center"
 "Mod+X" = "spawn:noctalia msg panel-toggle noctalia/notes:panel"
 "Alt+F4" = "spawn:noctalia msg panel-toggle session"
 "Print" = "spawn:noctalia msg plugin alexander/screen-toolkit:service all toggle"
@@ -19,10 +20,10 @@
 "Mod+Q" = "window-close"
 
 # ──────────────────────────── Window Navigation ─────────────────────────────
-"Mod+Left" = "window-focus-left"
-"Mod+Down" = "window-focus-down"
-"Mod+Up" = "window-focus-up"
-"Mod+Right" = "window-focus-right"
+"Mod+Left" = "window-focus-or-output-left"
+"Mod+Down" = "window-focus-or-output-down"
+"Mod+Up" = "window-focus-or-output-up"
+"Mod+Right" = "window-focus-or-output-right"
 
 "Mod+Shift+Left" = "column-move-left"
 "Mod+Shift+Down" = "window-move-down"
@@ -31,6 +32,8 @@
 
 "Mod+WheelUp" = "window-focus-left"
 "Mod+WheelDown" = "window-focus-right"
+"Mod+Shift+WheelUp" = "column-move-left"
+"Mod+Shift+WheelDown" = "column-move-right"
 
 # ─────────────────────────── Window State & Layout ──────────────────────────
 "Mod+T" = "window-toggle-floating"
@@ -65,11 +68,15 @@
 # ───────────────────────────── Workspace Navigation ─────────────────────────
 "Mod+Page_Up" = "workspace-previous"
 "Mod+Page_Down" = "workspace-next"
+"Mod+Ctrl+WheelUp" = "workspace-previous"
+"Mod+Ctrl+WheelDown" = "workspace-next"
+
 "Mod+Shift+Page_Up" = "window-move-to-workspace-previous"
 "Mod+Shift+Page_Down" = "window-move-to-workspace-next"
+"Mod+Ctrl+Shift+WheelUp" = "window-move-to-workspace-previous"
+"Mod+Ctrl+Shift+WheelDown" = "window-move-to-workspace-next"
 
-"Mod+Ctrl+WheelUp" = { action = "workspace-previous", cooldown_ms = 150 }
-"Mod+Ctrl+WheelDown" = { action = "workspace-next", cooldown_ms = 150 }
+"Alt+Tab" = "workspace-focus-last"
 
 # ───────────────────────────────── Scratchpads ──────────────────────────────
 "Mod+Shift+Space" = "window-move-to-scratchpad"
@@ -78,12 +85,13 @@
 "Mod+Tab" = "scratchpad-focus-next"
 
 # ────────────────────────────── Audio Controls ──────────────────────────────
-"XF86AudioRaiseVolume" = "spawn:wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"
-"XF86AudioLowerVolume" = "spawn:wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
-"XF86AudioMute" = "spawn:wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
-"XF86AudioPlay" = "spawn:playerctl play-pause"
-"XF86AudioNext" = "spawn:playerctl next"
-"XF86AudioPrev" = "spawn:playerctl previous"
+"XF86AudioRaiseVolume" = { action = "spawn:noctalia msg volume-up", allow_when_locked = true }
+"XF86AudioLowerVolume" = { action = "spawn:noctalia msg volume-down", allow_when_locked = true }
+"XF86AudioMute" = { action = "spawn:noctalia msg volume-mute", allow_when_locked = true }
+"XF86AudioPlay" = "spawn:noctalia msg media toggle"
+"XF86AudioNext" = "spawn:noctalia msg media next"
+"XF86AudioPrev" = "spawn:noctalia msg media previous"
+"XF86AudioStop" = "spawn:noctalia msg media stop"
 
 # ─────────────────────────────── Display Brightness ─────────────────────────
 "XF86MonBrightnessDown" = { action = "spawn:noctalia msg brightness-down 10", allow_when_locked = true }

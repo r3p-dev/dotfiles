@@ -18,7 +18,7 @@ bluez-obexd
 linux-firmware
 fwupd
 upower
-power-profiles-daemon
+tuned-ppd
 smartmontools
 dmidecode
 xorg-x11-server-Xwayland
@@ -45,7 +45,9 @@ google-noto-serif-fonts
 google-noto-color-emoji-fonts
 dejavu-sans-fonts
 dejavu-sans-mono-fonts
-liberation-fonts
+liberation-sans-fonts
+liberation-serif-fonts
+liberation-mono-fonts
 git
 curl
 wget

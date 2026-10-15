@@ -4,9 +4,16 @@ set -euo pipefail
 # ==========================================
 # Dotfiles installer -- Fedora
 #
-# Dijalankan dua tahap HANYA kalau perlu: mesin ber-NVIDIA dengan
-# Secure Boot aktif harus reboot untuk mendaftarkan kunci MOK sebelum
-# modul kernel bisa dimuat. Di luar itu, sekali jalan sampai selesai.
+# Targets Fedora Minimal: the base system from packages/fedora-base.txt,
+# then Umbriel, Noctalia and everyday tools on top of it.
+#
+# On Fedora Workstation the result is the same, plus GNOME, which stays
+# installed as a fallback in case Umbriel breaks; unused GNOME apps are
+# removed first (packages/fedora-remove.txt).
+#
+# Runs in two stages ONLY when needed: an NVIDIA machine with Secure
+# Boot enabled has to reboot to enroll the MOK key before the kernel
+# module can load. Otherwise it runs to completion in one go.
 # ==========================================
 
 REPO="https://github.com/r3p-dev/dotfiles/archive/refs/heads/main.tar.gz"
@@ -27,7 +34,7 @@ echo "==> Dotfiles installer"
 echo
 
 # ------------------------------------------
-# Pastikan ini Fedora
+# Make sure this is Fedora
 # ------------------------------------------
 
 if [[ ! -f /etc/os-release ]]; then
@@ -54,9 +61,9 @@ fi
 # Sudo
 # ------------------------------------------
 #
-# Minta password sekarang, selagi masih ada yang menunggu di depan
-# layar. Kalau prompt-nya muncul di tengah instalasi paket, dia gampang
-# terlewat dan sudo keburu timeout.
+# Ask for the password now, while someone is still at the screen. If
+# the prompt shows up in the middle of package installation, it is easy
+# to miss and sudo times out.
 
 echo "==> Requesting sudo access..."
 
@@ -83,9 +90,9 @@ trap 'cleanup; cleanup_sudo' EXIT
 # Bootstrap tools
 # ------------------------------------------
 #
-# Minimal Install (@core) tidak membawa tar, git, maupun pciutils, dan
-# ketiganya dibutuhkan sebelum apa pun yang lain -- termasuk lspci
-# untuk mendeteksi NVIDIA.
+# Minimal Install (@core) ships without tar, git or pciutils, and all
+# three are needed before anything else -- including lspci to detect
+# NVIDIA.
 
 BOOTSTRAP_TOOLS=()
 
@@ -96,12 +103,12 @@ done
 if ((${#BOOTSTRAP_TOOLS[@]} > 0)); then
     echo "==> Installing bootstrap tools: ${BOOTSTRAP_TOOLS[*]}"
 
-    # lspci hidup di paket bernama pciutils.
+    # lspci lives in the package named pciutils.
     sudo dnf install -y "${BOOTSTRAP_TOOLS[@]/lspci/pciutils}"
 fi
 
 # ------------------------------------------
-# Deteksi hardware
+# Hardware detection
 # ------------------------------------------
 
 HAS_NVIDIA=0
@@ -120,8 +127,8 @@ if command -v mokutil &>/dev/null; then
         SECURE_BOOT=1
     fi
 elif [[ -d /sys/firmware/efi ]]; then
-    # mokutil belum ada; baca langsung dari variabel EFI. Byte terakhir
-    # SecureBoot bernilai 1 kalau aktif.
+    # mokutil is not installed yet; read the EFI variable directly. The
+    # last byte of SecureBoot is 1 when it is enabled.
     if [[ -r /sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c ]]; then
         if [[ "$(od -An -t u1 -j 4 -N 1 \
             /sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c |
@@ -134,7 +141,7 @@ fi
 ((SECURE_BOOT)) && echo "==> Secure Boot is enabled"
 
 # ------------------------------------------
-# Deteksi tahap
+# Stage detection
 # ------------------------------------------
 
 STAGE=1
@@ -142,13 +149,13 @@ STAGE=1
 [[ -f "$STATE_FILE" ]] && STAGE="$(cat "$STATE_FILE")"
 
 # ==========================================
-# TAHAP 1 -- pendaftaran kunci MOK
+# STAGE 1 -- MOK key enrollment
 # ==========================================
 #
-# Hanya relevan untuk NVIDIA dengan Secure Boot. Modul yang dibangun
-# akmods ditandatangani kunci lokal, dan kunci itu harus terdaftar di
-# firmware sebelum kernel mau memuatnya. Pendaftarannya butuh reboot
-# dan konfirmasi manual di layar biru MOK Manager.
+# Only relevant for NVIDIA with Secure Boot. Modules built by akmods
+# are signed with a local key, and that key has to be enrolled in the
+# firmware before the kernel will load them. Enrollment needs a reboot
+# and a manual confirmation on the blue MOK Manager screen.
 
 if ((STAGE == 1)) && ((HAS_NVIDIA)) && ((SECURE_BOOT)); then
     echo
@@ -191,7 +198,7 @@ if ((STAGE == 1)) && ((HAS_NVIDIA)) && ((SECURE_BOOT)); then
 fi
 
 # ==========================================
-# TAHAP 2 -- instalasi penuh
+# STAGE 2 -- full installation
 # ==========================================
 
 echo "==> Downloading dotfiles..."
@@ -200,8 +207,9 @@ curl -fsSL "$REPO" | tar -xz -C "$TEMP_DIR"
 
 SCRIPT_DIR="$TEMP_DIR/dotfiles-main"
 
-FEDORA_PACKAGES="$SCRIPT_DIR/packages/fedora.txt"
 FEDORA_BASE_PACKAGES="$SCRIPT_DIR/packages/fedora-base.txt"
+FEDORA_PACKAGES="$SCRIPT_DIR/packages/fedora.txt"
+FEDORA_REMOVE_PACKAGES="$SCRIPT_DIR/packages/fedora-remove.txt"
 CARGO_PACKAGES="$SCRIPT_DIR/packages/cargo.txt"
 CONFIGS_DIR="$SCRIPT_DIR/configs"
 
@@ -214,9 +222,9 @@ read_package_list() {
 }
 
 dnf_install() {
-    # Coba sekali jalan dulu. Kalau ada satu nama paket yang tidak
-    # tersedia dnf membatalkan seluruh transaksi, jadi fallback-nya
-    # pasang satu per satu dan catat yang gagal.
+    # Try everything in one go first. If a single package name is
+    # unavailable, dnf aborts the whole transaction, so the fallback
+    # installs them one by one and records the ones that fail.
 
     if sudo dnf install -y "$@"; then
         return 0
@@ -234,13 +242,46 @@ dnf_install() {
 }
 
 add_repo_file() {
-    # dnf5 (Fedora 41+) memakai "addrepo", dnf4 memakai "--add-repo".
-
     local url="$1"
 
-    sudo dnf config-manager addrepo --from-repofile="$url" 2>/dev/null ||
-        sudo dnf config-manager --add-repo "$url"
+    sudo dnf config-manager addrepo --from-repofile="$url" 2>/dev/null 
 }
+
+# ------------------------------------------
+# Unused preinstalled apps
+# ------------------------------------------
+#
+# Only matters on Workstation; on Minimal nothing matches. Removed
+# before the upgrade so they are not downloaded. The list may contain
+# patterns (libreoffice*); names that are not installed are skipped,
+# because dnf fails the whole transaction if a single name is missing.
+
+if [[ -f "$FEDORA_REMOVE_PACKAGES" ]]; then
+    echo "==> Removing unused Workstation apps..."
+
+    mapfile -t REMOVE_PATTERNS < <(read_package_list "$FEDORA_REMOVE_PACKAGES")
+    mapfile -t INSTALLED < <(rpm -qa --qf '%{NAME}\n')
+
+    TO_REMOVE=()
+
+    for pattern in "${REMOVE_PATTERNS[@]}"; do
+        for name in "${INSTALLED[@]}"; do
+            # $pattern is unquoted so it is matched as a glob.
+            # shellcheck disable=SC2053
+            if [[ "$name" == $pattern ]]; then
+                TO_REMOVE+=("$name")
+            fi
+        done
+    done
+
+    if ((${#TO_REMOVE[@]} > 0)); then
+        sudo dnf remove -y "${TO_REMOVE[@]}" ||
+            echo "WARNING: some apps could not be removed."
+        sudo dnf autoremove -y || true
+    else
+        echo "    -> Nothing to remove."
+    fi
+fi
 
 echo "==> Updating system..."
 sudo dnf upgrade -y --refresh
@@ -260,9 +301,9 @@ sudo dnf install -y \
 # Codec
 # ------------------------------------------
 #
-# Fedora mengirim ffmpeg-free yang dipangkas (tanpa H.264/H.265/AAC).
-# Paket penuh dari RPM Fusion bentrok dengannya, jadi harus 'swap',
-# bukan 'install' -- itu sebabnya ffmpeg tidak ada di fedora.txt.
+# Fedora ships a trimmed ffmpeg-free (no H.264/H.265/AAC). The full
+# package from RPM Fusion conflicts with it, so it has to be 'swap',
+# not 'install' -- that is why ffmpeg is not in fedora.txt.
 
 echo "==> Swapping to full ffmpeg..."
 
@@ -279,9 +320,9 @@ sudo dnf group upgrade -y multimedia \
 sudo dnf group upgrade -y sound-and-video ||
     echo "WARNING: sound-and-video group upgrade failed."
 
-# Sama seperti ffmpeg: driver VA-API Mesa bawaan Fedora dipangkas, dan
-# versi lengkapnya dari RPM Fusion bentrok -- jadi swap, bukan install.
-# Ini yang dipakai iGPU AMD untuk decode video berakselerasi.
+# Same as ffmpeg: Fedora's Mesa VA-API drivers are trimmed, and the full
+# version from RPM Fusion conflicts -- so swap, not install. AMD iGPUs
+# use these for hardware-accelerated video decoding.
 
 echo "==> Swapping to full Mesa VA-API drivers..."
 
@@ -303,11 +344,11 @@ sudo dnf install -y --nogpgcheck \
 # COPR
 # ------------------------------------------
 #
-# hyprpicker tidak ada di repo resmi Fedora.
+# hyprpicker and yazi are not in the official Fedora repositories.
 
 echo "==> Enabling COPR repositories..."
 
-# dnf5 memisahkan subperintah copr ke paket plugin tersendiri.
+# dnf5 moved the copr subcommand into a separate plugin package.
 sudo dnf install -y dnf5-plugins 2>/dev/null ||
     sudo dnf install -y dnf-plugins-core ||
     echo "WARNING: dnf plugins install failed; copr may be unavailable."
@@ -315,8 +356,11 @@ sudo dnf install -y dnf5-plugins 2>/dev/null ||
 sudo dnf -y copr enable lionheartp/Hyprland ||
     echo "WARNING: COPR lionheartp/Hyprland failed; hyprpicker will be missing."
 
+sudo dnf -y copr enable lihaohong/yazi ||
+    echo "WARNING: COPR lihaohong/yazi failed; yazi will be missing."
+
 # ------------------------------------------
-# Repo vendor
+# Vendor repositories
 # ------------------------------------------
 
 echo "==> Adding vendor repositories..."
@@ -341,17 +385,22 @@ gpgkey=https://packages.microsoft.com/keys/microsoft.asc
 EOF
 fi
 
-if [[ ! -f /etc/yum.repos.d/tailscale.repo ]]; then
-    add_repo_file https://pkgs.tailscale.com/stable/fedora/tailscale.repo ||
-        echo "WARNING: Tailscale repository setup failed."
+if [[ ! -f /etc/yum.repos.d/gh-cli.repo ]]; then
+    add_repo_file https://cli.github.com/packages/rpm/gh-cli.repo ||
+        echo "WARNING: GitHub CLI repository setup failed."
+fi
+
+if [[ ! -f /etc/yum.repos.d/cloudflared.repo ]]; then
+    add_repo_file https://pkg.cloudflare.com/cloudflared.repo ||
+        echo "WARNING: cloudflared repository setup failed."
 fi
 
 # ------------------------------------------
-# Paket
+# Packages
 # ------------------------------------------
 #
-# Base system hanya berguna di instalasi minimal; di Workstation
-# semuanya sudah ada dan dnf akan melewatinya.
+# Base system first: audio, network, Bluetooth, fonts, and everything
+# else Minimal lacks. On Workstation most of it is already installed.
 
 if [[ -f "$FEDORA_BASE_PACKAGES" ]]; then
     echo "==> Installing base system packages..."
@@ -376,18 +425,18 @@ else
 fi
 
 # ------------------------------------------
-# Driver NVIDIA
+# NVIDIA driver
 # ------------------------------------------
 #
-# akmod membangun modul terhadap kernel terpasang, dan itu jalan di
-# latar belakang setelah paketnya masuk. Reboot sebelum build selesai
-# menghasilkan boot tanpa driver, jadi tunggu sampai modulnya ada.
+# akmod builds the module against the installed kernel, in the
+# background after the package is installed. Rebooting before the build
+# finishes boots without a driver, so wait until the module exists.
 
 if ((HAS_NVIDIA)); then
     echo "==> Installing NVIDIA driver..."
 
-    # Varian "open" menyamai nvidia-open di Arch, dan itu yang
-    # direkomendasikan NVIDIA untuk Turing ke atas.
+    # The "open" variant matches nvidia-open on Arch, and it is what
+    # NVIDIA recommends for Turing and newer.
 
     dnf_install \
         akmod-nvidia-open \
@@ -396,8 +445,8 @@ if ((HAS_NVIDIA)); then
         libva-utils \
         vdpauinfo
 
-    # Tandai sebagai paket yang diminta user supaya tidak ikut terhapus
-    # saat autoremove membersihkan dependensi.
+    # Mark it as user-installed so autoremove does not remove it when
+    # cleaning up dependencies.
     sudo dnf mark user akmod-nvidia-open 2>/dev/null || true
 
     echo "==> Waiting for the kernel module to build (up to 10 minutes)..."
@@ -424,54 +473,46 @@ if ((HAS_NVIDIA)); then
 fi
 
 # ------------------------------------------
-# Flatpak
-# ------------------------------------------
-
-if command -v flatpak &>/dev/null; then
-    echo "==> Installing Spotify via Flatpak..."
-
-    flatpak remote-add --if-not-exists --user \
-        flathub https://dl.flathub.org/repo/flathub.flatpakrepo || true
-
-    flatpak install -y --user flathub com.spotify.Client ||
-        MISSING_PACKAGES+=("com.spotify.Client (flatpak)")
-else
-    MISSING_PACKAGES+=("flatpak (dibutuhkan untuk Spotify)")
-fi
-
-# ------------------------------------------
-# Crate Rust
+# Per-user toolchains
 # ------------------------------------------
 #
-# yazi, resvg, satty dan wl-screenrec tidak dikemas untuk Fedora.
-# Build-dep-nya dipasang duluan: satty butuh GTK4, wl-screenrec butuh
-# header ffmpeg/VA-API plus clang untuk bindgen.
+# Node (via fnm), Bun and Rust are installed with their official
+# installers into the home directory, not with dnf, so their versions
+# can be changed without sudo. The installers may edit the fish config;
+# config.fish and conf.d/ from this repo are copied later and overwrite it.
 
-if [[ -f "$CARGO_PACKAGES" ]]; then
-    echo "==> Installing Rust toolchain and build dependencies..."
+if [[ ! -x "$HOME/.local/share/fnm/fnm" ]]; then
+    echo "==> Installing fnm..."
+    curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell ||
+        MISSING_PACKAGES+=("fnm")
+fi
 
-    CARGO_BUILD_DEPS=(
-        cargo
-        rust
-        clang
-        pkgconf-pkg-config
-        gtk4-devel
-        libadwaita-devel
-        ffmpeg-devel
-        libva-devel
-    )
+if [[ ! -x "$HOME/.bun/bin/bun" ]]; then
+    echo "==> Installing Bun..."
+    curl -fsSL https://bun.sh/install | bash ||
+        MISSING_PACKAGES+=("bun")
+fi
 
-    dnf_install "${CARGO_BUILD_DEPS[@]}"
+if [[ ! -x "$HOME/.cargo/bin/rustup" ]]; then
+    echo "==> Installing Rust (rustup)..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y ||
+        MISSING_PACKAGES+=("rustup")
+fi
 
-    echo "==> Installing Rust crates (this takes a while)..."
+# Crates from packages/cargo.txt. cargo is not on PATH yet when rustup
+# was just installed, so call it from ~/.cargo/bin directly. cargo itself
+# skips crates that are already installed at the latest version.
 
-    mapfile -t CRATES < <(read_package_list "$CARGO_PACKAGES")
+CARGO="$HOME/.cargo/bin/cargo"
 
-    for crate in "${CRATES[@]}"; do
-        echo "    -> $crate"
+if [[ -f "$CARGO_PACKAGES" && -x "$CARGO" ]]; then
+    echo "==> Installing cargo packages..."
 
-        cargo install --locked "$crate" ||
-            MISSING_PACKAGES+=("$crate (cargo)")
+    mapfile -t CARGO_CRATES < <(read_package_list "$CARGO_PACKAGES")
+
+    for crate in "${CARGO_CRATES[@]}"; do
+        "$CARGO" install --locked "$crate" ||
+            MISSING_PACKAGES+=("cargo:$crate")
     done
 fi
 
@@ -487,9 +528,10 @@ if [[ -n "$GREETER_SESSION" ]]; then
 
     sudo install -d /etc/greetd
 
-    # Akun yang menjalankan greeter beda nama antar distro: paket Arch
-    # membuat "greeter", RPM Fedora membuat "greetd" lewat sysusers.d.
-    # Salah nama -> greetd mati seketika dengan "session user not found".
+    # The account that runs the greeter is named differently per distro:
+    # the Arch package creates "greeter", the Fedora RPM creates "greetd"
+    # via sysusers.d. Wrong name -> greetd dies at once with "session
+    # user not found".
 
     GREETER_USER=""
 
@@ -514,12 +556,12 @@ if [[ -n "$GREETER_SESSION" ]]; then
 vt = 1
 
 [default_session]
-command = "$GREETER_SESSION"
+command = "$GREETER_SESSION -- --session umbriel"
 user = "$GREETER_USER"
 EOF
 
-    # Greeter menulis config dan log-nya di sini; pemilik yang salah
-    # menghasilkan layar hitam walau service-nya terlihat aktif.
+    # The greeter writes its config and logs here; the wrong owner gives
+    # a black screen even though the service looks active.
 
     if [[ -d /var/lib/noctalia-greeter ]]; then
         echo "    -> Fixing ownership of /var/lib/noctalia-greeter"
@@ -541,8 +583,8 @@ EOF
     sudo systemctl reset-failed greetd 2>/dev/null || true
     sudo systemctl enable greetd
 
-    # Instalasi minimal Fedora default-nya multi-user.target, jadi boot
-    # berhenti di TTY dan greetd tidak pernah dijalankan.
+    # A minimal Fedora install defaults to multi-user.target, so boot
+    # stops at a TTY and greetd never starts.
 
     if [[ "$(systemctl get-default)" != "graphical.target" ]]; then
         echo "    -> Setting default target to graphical"
@@ -562,7 +604,7 @@ else
 fi
 
 # ------------------------------------------
-# Fish sebagai shell default
+# Fish as the default shell
 # ------------------------------------------
 
 FISH_PATH="$(command -v fish || true)"
@@ -578,8 +620,8 @@ if [[ -n "$FISH_PATH" ]]; then
             echo "$FISH_PATH" | sudo tee -a /etc/shells >/dev/null
         fi
 
-        # chsh hidup di util-linux-user, yang tidak terpasang secara
-        # default di Fedora.
+        # chsh lives in util-linux-user, which Fedora does not install
+        # by default.
 
         if command -v chsh &>/dev/null; then
             sudo chsh -s "$FISH_PATH" "$USER"
@@ -630,14 +672,31 @@ else
     echo "WARNING: $CONFIGS_DIR not found."
 fi
 
-FASTFETCH_CONFIG="$HOME/.config/fastfetch/config.jsonc"
+# ------------------------------------------
+# ~/.local (desktop entries, etc.)
+# ------------------------------------------
 
-if [[ -f "$FASTFETCH_CONFIG" ]]; then
-    sed -i 's/"endeavouros_small"/"fedora_small"/' "$FASTFETCH_CONFIG"
+LOCAL_DIR="$SCRIPT_DIR/locals"
+
+if [[ -d "$LOCAL_DIR" ]]; then
+    echo "==> Installing ~/.local files..."
+    mkdir -p "$HOME/.local"
+    cp -a "$LOCAL_DIR"/. "$HOME/.local"/
 fi
 
 # ------------------------------------------
-# Selesai
+# Default apps
+# ------------------------------------------
+
+if command -v xdg-mime &>/dev/null; then
+    echo "==> Setting default applications..."
+    update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
+    xdg-mime default imv-dir.desktop \
+        image/png image/jpeg image/webp image/gif image/bmp image/tiff
+fi
+
+# ------------------------------------------
+# Done
 # ------------------------------------------
 
 rm -f "$STATE_FILE"

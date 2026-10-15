@@ -2,7 +2,7 @@
 Description=PostgreSQL 17 (development)
 
 [Container]
-Image=docker.io/library/postgres:17
+Image=docker.io/postgis/postgis:17-3.5
 ContainerName=postgres
 Environment=POSTGRES_USER=user
 Environment=POSTGRES_PASSWORD=password
