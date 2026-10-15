@@ -29,7 +29,7 @@ set -Eeuo pipefail
 shopt -s inherit_errexit nullglob
 umask 022
 
-readonly VPS_VERSION="1.2.4"
+readonly VPS_VERSION="1.2.5"
 readonly INSTALL_PATH="/usr/local/bin/vps"
 readonly CONFIG_DIR="/etc/vps"
 readonly CONFIG_PATH="$CONFIG_DIR/vps.conf"
@@ -2295,7 +2295,7 @@ __IF__    runs-on: ubuntu-latest
       contents: read
       packages: write
     outputs:
-      image: ${{ steps.ref.outputs.image }}
+      image: ${{ steps.push.outputs.image }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -2304,34 +2304,31 @@ __IF__    runs-on: ubuntu-latest
       - id: name
         run: echo "image=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
 
-      - uses: docker/setup-buildx-action@v4
+      # Podman comes preinstalled on GitHub's Ubuntu runners: no Docker needed
+      - name: Log in to GHCR
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s\n' "$REGISTRY_TOKEN" | podman login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
-      - uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - id: build
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          push: true
-          platforms: __PLATFORM__
-          provenance: false
-          sbom: false
-          tags: |
-            ${{ steps.name.outputs.image }}:latest
-            ${{ steps.name.outputs.image }}:${{ env.REF }}
-          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - id: ref
+      # builds the repo's Containerfile (or Dockerfile); base images must be fully
+      # qualified (docker.io/library/node:22), the runner has no short-name registries
+      - name: Build
         env:
           IMAGE: ${{ steps.name.outputs.image }}
-          DIGEST: ${{ steps.build.outputs.digest }}
-        run: echo "image=${IMAGE}@${DIGEST}" >> "$GITHUB_OUTPUT"
+          SOURCE: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          podman build --platform __PLATFORM__ \
+            --label "org.opencontainers.image.source=$SOURCE" \
+            -t "$IMAGE:$REF" -t "$IMAGE:latest" .
+
+      - id: push
+        name: Push
+        env:
+          IMAGE: ${{ steps.name.outputs.image }}
+        run: |
+          podman push --digestfile digest "$IMAGE:$REF"
+          podman push "$IMAGE:latest"
+          echo "image=${IMAGE}@$(cat digest)" >> "$GITHUB_OUTPUT"
 
   deploy:
     name: Deploy to the server
