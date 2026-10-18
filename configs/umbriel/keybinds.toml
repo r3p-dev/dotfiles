@@ -35,6 +35,8 @@
 "Mod+Shift+WheelUp" = "column-move-left"
 "Mod+Shift+WheelDown" = "column-move-right"
 
+"Mod+Tab" = "spawn:noctalia msg window-switcher"
+
 # ─────────────────────────── Window State & Layout ──────────────────────────
 "Mod+T" = "window-toggle-floating"
 "Mod+Shift+T" = "window-focus-switch-floating"
@@ -45,6 +47,8 @@
 
 "Mod+C" = "column-center"
 "Mod+Shift+C" = "window-center"
+
+"Mod+Backslash" = "workspace-set-layout:toggle:scrolling,dwindle,master"
 
 # ──────────────────────────────── Overview ──────────────────────────────────
 "Mod+O" = { action = "overview-toggle", repeat = false }
@@ -82,7 +86,6 @@
 "Mod+Shift+Space" = "window-move-to-scratchpad"
 "Mod+Space" = "scratchpad-toggle"
 "Mod+Ctrl+Space" = "window-restore-from-scratchpad"
-"Mod+Tab" = "scratchpad-focus-next"
 
 # ────────────────────────────── Audio Controls ──────────────────────────────
 "XF86AudioRaiseVolume" = { action = "spawn:noctalia msg volume-up", allow_when_locked = true }

@@ -142,7 +142,6 @@ magnification_scale = 1.4500000476837158
 main_axis_padding = 16
 margin_edge = 0
 margin_ends = 0
-monitors = []
 pinned = []
 position = "bottom"
 radius = 16
@@ -535,7 +534,12 @@ time_format = "{:%H:%M}"
     direction = "down"
 
     [shell.window_switcher]
-    mru = false
+    style = "carousel"              
+    current_workspace_only = false 
+    show_all_outputs = true         
+    show_app_icon = true
+    show_caption = true
+    show_count = true
 
 [storage]
 key_file = ""
