@@ -448,6 +448,14 @@ if [[ ! -x "$HOME/.local/share/fnm/fnm" ]]; then
         MISSING_PACKAGES+=("fnm")
 fi
 
+FNM_BIN="$HOME/.local/share/fnm/fnm"
+
+if [[ -x "$FNM_BIN" ]] && ! "$FNM_BIN" current &>/dev/null; then
+    echo "==> Installing Node.js (LTS) via fnm..."
+    "$FNM_BIN" install --lts || true
+    "$FNM_BIN" default lts-latest || true
+fi
+
 if [[ ! -x "$HOME/.bun/bin/bun" ]]; then
     echo "==> Installing Bun..."
     curl -fsSL https://bun.sh/install | bash ||
