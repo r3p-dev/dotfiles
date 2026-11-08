@@ -2,14 +2,12 @@
 set -euo pipefail
 
 # ==========================================
-# Dotfiles installer -- Fedora
+# Dotfiles installer -- Fedora Everything NetInstall
 #
-# Targets Fedora Minimal: the base system from packages/fedora-base.txt,
-# then Umbriel, Noctalia and everyday tools on top of it.
-#
-# On Fedora Workstation the result is the same, plus GNOME, which stays
-# installed as a fallback in case Umbriel breaks; unused GNOME apps are
-# removed first (packages/fedora-remove.txt).
+# Targets a clean Fedora Everything NetInstall with NO software
+# template selected (pure bare Linux base). Installs the base system
+# from packages/fedora-base.txt, then Umbriel, Noctalia and everyday
+# tools on top of it.
 #
 # Runs in two stages ONLY when needed: an NVIDIA machine with Secure
 # Boot enabled has to reboot to enroll the MOK key before the kernel
@@ -209,7 +207,6 @@ SCRIPT_DIR="$TEMP_DIR/dotfiles-main"
 
 FEDORA_BASE_PACKAGES="$SCRIPT_DIR/packages/fedora-base.txt"
 FEDORA_PACKAGES="$SCRIPT_DIR/packages/fedora.txt"
-FEDORA_REMOVE_PACKAGES="$SCRIPT_DIR/packages/fedora-remove.txt"
 CARGO_PACKAGES="$SCRIPT_DIR/packages/cargo.txt"
 CONFIGS_DIR="$SCRIPT_DIR/configs"
 
@@ -247,42 +244,6 @@ add_repo_file() {
     sudo dnf config-manager addrepo --from-repofile="$url" 2>/dev/null 
 }
 
-# ------------------------------------------
-# Unused preinstalled apps
-# ------------------------------------------
-#
-# Only matters on Workstation; on Minimal nothing matches. Removed
-# before the upgrade so they are not downloaded. The list may contain
-# patterns (libreoffice*); names that are not installed are skipped,
-# because dnf fails the whole transaction if a single name is missing.
-
-if [[ -f "$FEDORA_REMOVE_PACKAGES" ]]; then
-    echo "==> Removing unused Workstation apps..."
-
-    mapfile -t REMOVE_PATTERNS < <(read_package_list "$FEDORA_REMOVE_PACKAGES")
-    mapfile -t INSTALLED < <(rpm -qa --qf '%{NAME}\n')
-
-    TO_REMOVE=()
-
-    for pattern in "${REMOVE_PATTERNS[@]}"; do
-        for name in "${INSTALLED[@]}"; do
-            # $pattern is unquoted so it is matched as a glob.
-            # shellcheck disable=SC2053
-            if [[ "$name" == $pattern ]]; then
-                TO_REMOVE+=("$name")
-            fi
-        done
-    done
-
-    if ((${#TO_REMOVE[@]} > 0)); then
-        sudo dnf remove -y "${TO_REMOVE[@]}" ||
-            echo "WARNING: some apps could not be removed."
-        sudo dnf autoremove -y || true
-    else
-        echo "    -> Nothing to remove."
-    fi
-fi
-
 echo "==> Updating system..."
 sudo dnf upgrade -y --refresh
 
@@ -298,36 +259,40 @@ sudo dnf install -y \
     echo "WARNING: RPM Fusion setup failed; codecs and NVIDIA driver will be unavailable."
 
 # ------------------------------------------
-# Codec
+# Codec & Hardware Acceleration
 # ------------------------------------------
 #
-# Fedora ships a trimmed ffmpeg-free (no H.264/H.265/AAC). The full
-# package from RPM Fusion conflicts with it, so it has to be 'swap',
-# not 'install' -- that is why ffmpeg is not in fedora.txt.
+# Fedora ships a trimmed ffmpeg-free and mesa-va-drivers. If they are
+# present on the system, swap them for the full versions from RPM Fusion.
+# On a pure bare netinstall where they are absent, install them directly.
 
-echo "==> Swapping to full ffmpeg..."
+echo "==> Installing full ffmpeg..."
 
-sudo dnf swap -y ffmpeg-free ffmpeg --allowerasing ||
-    echo "WARNING: ffmpeg swap failed or was already done."
+if rpm -q ffmpeg-free &>/dev/null; then
+    sudo dnf swap -y ffmpeg-free ffmpeg --allowerasing ||
+        echo "WARNING: ffmpeg swap failed."
+else
+    dnf_install ffmpeg
+fi
 
 echo "==> Installing multimedia groups..."
 
-sudo dnf group upgrade -y multimedia \
+sudo dnf group install -y multimedia \
     --setopt="install_weak_deps=False" \
     --exclude=PackageKit-gstreamer-plugin ||
-    echo "WARNING: multimedia group upgrade failed."
+    echo "WARNING: multimedia group install failed."
 
-sudo dnf group upgrade -y sound-and-video ||
-    echo "WARNING: sound-and-video group upgrade failed."
+sudo dnf group install -y sound-and-video ||
+    echo "WARNING: sound-and-video group install failed."
 
-# Same as ffmpeg: Fedora's Mesa VA-API drivers are trimmed, and the full
-# version from RPM Fusion conflicts -- so swap, not install. AMD iGPUs
-# use these for hardware-accelerated video decoding.
+echo "==> Installing full Mesa VA-API drivers..."
 
-echo "==> Swapping to full Mesa VA-API drivers..."
-
-sudo dnf swap -y mesa-va-drivers mesa-va-drivers-freeworld --allowerasing ||
-    echo "WARNING: mesa-va-drivers swap failed or was already done."
+if rpm -q mesa-va-drivers &>/dev/null; then
+    sudo dnf swap -y mesa-va-drivers mesa-va-drivers-freeworld --allowerasing ||
+        echo "WARNING: mesa-va-drivers swap failed."
+else
+    dnf_install mesa-va-drivers-freeworld
+fi
 
 # ------------------------------------------
 # Terra
@@ -390,11 +355,6 @@ if [[ ! -f /etc/yum.repos.d/gh-cli.repo ]]; then
         echo "WARNING: GitHub CLI repository setup failed."
 fi
 
-if [[ ! -f /etc/yum.repos.d/cloudflared.repo ]]; then
-    add_repo_file https://pkg.cloudflare.com/cloudflared.repo ||
-        echo "WARNING: cloudflared repository setup failed."
-fi
-
 # ------------------------------------------
 # Packages
 # ------------------------------------------
@@ -435,10 +395,11 @@ fi
 if ((HAS_NVIDIA)); then
     echo "==> Installing NVIDIA driver..."
 
-    # The "open" variant matches nvidia-open on Arch, and it is what
-    # NVIDIA recommends for Turing and newer.
+    # The "open" variant is what NVIDIA recommends for Turing and newer.
 
     dnf_install \
+        kernel-devel \
+        kernel-headers \
         akmod-nvidia-open \
         xorg-x11-drv-nvidia-cuda \
         libva-nvidia-driver \
@@ -517,6 +478,35 @@ if [[ -f "$CARGO_PACKAGES" && -x "$CARGO" ]]; then
 fi
 
 # ------------------------------------------
+# Spotifast
+# ------------------------------------------
+#
+# Fast native Rust Spotify client (https://spotifast.rocks/).
+# Downloads and installs the latest official release RPM from GitHub.
+
+if ! command -v spotifast &>/dev/null; then
+    echo "==> Installing Spotifast..."
+
+    ARCH="$(uname -m)"
+    SPOTIFAST_TAG="$(curl -sI https://github.com/crmne/spotifast/releases/latest | grep -i '^location:' | sed -E 's|.*/tag/v?([0-9.]+).*|\1|' | tr -d '\r\n')"
+
+    if [[ -z "$SPOTIFAST_TAG" ]]; then
+        SPOTIFAST_TAG="$(curl -fsSL https://api.github.com/repos/crmne/spotifast/releases/latest 2>/dev/null | jq -r '.tag_name // empty' | sed 's/^v//')"
+    fi
+
+    if [[ -n "$SPOTIFAST_TAG" ]]; then
+        SPOTIFAST_RPM_URL="https://github.com/crmne/spotifast/releases/download/v${SPOTIFAST_TAG}/spotifast-${SPOTIFAST_TAG}-1.${ARCH}.rpm"
+        echo "    -> Installing Spotifast v${SPOTIFAST_TAG} (${ARCH})..."
+        dnf_install "$SPOTIFAST_RPM_URL" || MISSING_PACKAGES+=("spotifast")
+    else
+        echo "WARNING: Could not determine latest Spotifast version."
+        MISSING_PACKAGES+=("spotifast")
+    fi
+else
+    echo "==> Spotifast is already installed."
+fi
+
+# ------------------------------------------
 # Greeter
 # ------------------------------------------
 
@@ -528,25 +518,16 @@ if [[ -n "$GREETER_SESSION" ]]; then
 
     sudo install -d /etc/greetd
 
-    # The account that runs the greeter is named differently per distro:
-    # the Arch package creates "greeter", the Fedora RPM creates "greetd"
-    # via sysusers.d. Wrong name -> greetd dies at once with "session
-    # user not found".
+    # Fedora's greetd package creates the "greetd" user account via sysusers.d.
+    # Wrong name -> greetd dies at once with "session user not found".
 
-    GREETER_USER=""
-
-    for candidate in greeter greetd; do
-        if getent passwd "$candidate" &>/dev/null; then
-            GREETER_USER="$candidate"
-            break
-        fi
-    done
-
-    if [[ -z "$GREETER_USER" ]]; then
-        echo "ERROR: No greeter account found (tried: greeter, greetd)."
+    if ! getent passwd greetd &>/dev/null; then
+        echo "ERROR: The greetd user account was not found."
         echo "ERROR: Is the greetd package installed?"
         exit 1
     fi
+
+    GREETER_USER="greetd"
 
     echo "    -> Greeter account: $GREETER_USER"
     echo "    -> Writing /etc/greetd/config.toml"
@@ -592,10 +573,14 @@ EOF
     fi
 
     if [[ ! -e "$DM_LINK" ]]; then
-        echo "WARNING: display-manager.service alias was not created."
-        echo "WARNING: Run: sudo ln -sf /usr/lib/systemd/system/greetd.service \\"
-        echo "WARNING:          /etc/systemd/system/display-manager.service"
+        echo "    -> Linking display-manager.service to greetd"
+        sudo ln -sf /usr/lib/systemd/system/greetd.service /etc/systemd/system/display-manager.service 2>/dev/null || true
     fi
+
+    echo "==> Enabling base system services..."
+    sudo systemctl enable NetworkManager 2>/dev/null || true
+    sudo systemctl enable bluetooth 2>/dev/null || true
+    sudo systemctl enable firewalld 2>/dev/null || true
 
     REBOOT_REQUIRED=1
 else
@@ -635,6 +620,15 @@ if [[ -n "$FISH_PATH" ]]; then
     fi
 else
     echo "WARNING: fish was not found; cannot set default shell."
+fi
+
+# ------------------------------------------
+# User directories
+# ------------------------------------------
+
+if command -v xdg-user-dirs-update &>/dev/null; then
+    echo "==> Initializing user directories..."
+    xdg-user-dirs-update
 fi
 
 # ------------------------------------------

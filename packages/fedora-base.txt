@@ -38,6 +38,7 @@ xz
 dosfstools
 exfatprogs
 ntfs-3g
+btrfs-progs
 gvfs
 gvfs-mtp
 google-noto-sans-fonts

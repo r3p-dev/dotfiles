@@ -532,6 +532,7 @@ EOF
     useradd --create-home --shell /bin/bash "$USER_NAME"
     ok "created user $USER_NAME"
   fi
+  chmod 0700 "$USER_HOME" 2>/dev/null || true
   usermod -aG sudo,adm,systemd-journal "$USER_NAME"
   ensure_subids
   load_user_ctx
@@ -607,6 +608,14 @@ setup_kernel() {
   printf 'tcp_bbr\n' | write_file /etc/modules-load.d/90-vps-bbr.conf 0644
   modprobe tcp_bbr 2>/dev/null || warn "tcp_bbr unavailable — keeping the default congestion control"
 
+  write_file /etc/modprobe.d/90-vps-blacklist.conf 0644 <<'EOF'
+# Managed by vps-setup.sh — disable unused protocols vulnerable to local exploits
+install dccp /bin/true
+install sctp /bin/true
+install rds /bin/true
+install tipc /bin/true
+EOF
+
   # A leading "-" makes systemd-sysctl skip keys this kernel doesn't have.
   write_file /etc/sysctl.d/90-vps.conf 0644 <<'EOF'
 # Managed by vps-setup.sh
@@ -632,14 +641,21 @@ net.ipv4.tcp_syncookies = 1
 net.ipv4.tcp_rfc1337 = 1
 
 # --- kernel hardening
+kernel.randomize_va_space = 2
+kernel.sysrq = 0
 kernel.kptr_restrict = 2
 kernel.dmesg_restrict = 1
 kernel.unprivileged_bpf_disabled = 1
 net.core.bpf_jit_harden = 2
+-kernel.perf_event_paranoid = 3
 -kernel.yama.ptrace_scope = 1
 kernel.kexec_load_disabled = 1
+-vm.unprivileged_userfaultfd = 0
+-dev.tty.tiocsti = 0
 fs.protected_fifos = 2
 fs.protected_regular = 2
+fs.protected_symlinks = 1
+fs.protected_hardlinks = 1
 fs.suid_dumpable = 0
 
 # --- rootless containers
@@ -673,6 +689,8 @@ APT::Periodic::AutocleanInterval "7";
 EOF
   write_file /etc/apt/apt.conf.d/52vps-unattended-upgrades 0644 <<EOF
 // Managed by vps-setup.sh
+Unattended-Upgrade::AutoFixInterruptedDpkg "true";
+Unattended-Upgrade::MinimalSteps "true";
 Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
 Unattended-Upgrade::Remove-New-Unused-Dependencies "true";
 Unattended-Upgrade::Remove-Unused-Dependencies "true";
@@ -997,8 +1015,8 @@ install_self() {
   src=$(readlink -f "${BASH_SOURCE[0]}")
   [[ -f $src ]] || die "run this script from a file (not through a pipe)"
   if [[ $src != "$INSTALL_PATH" ]]; then install -m 0755 -o root -g root "$src" "$INSTALL_PATH"; fi
-  install -d -m 0755 "$CONFIG_DIR"
-  render_config | write_file "$CONFIG_PATH" 0644 root
+  install -d -m 0700 "$CONFIG_DIR"
+  render_config | write_file "$CONFIG_PATH" 0600 root
   ok "installed $INSTALL_PATH, settings saved in $CONFIG_PATH"
 }
 
@@ -1021,6 +1039,11 @@ table inet vps_filter {
     ct state established,related accept
     ct state invalid drop
     iif "lo" accept
+
+    # Drop invalid TCP flags (reconnaissance / scan mitigation)
+    tcp flags & (fin|syn|rst|psh|ack|urg) == 0 drop comment "drop null packets"
+    tcp flags & (fin|syn|rst|psh|ack|urg) == (fin|syn|rst|psh|ack|urg) drop comment "drop xmas packets"
+    tcp flags & (syn|rst) == (syn|rst) drop comment "drop syn-rst packets"
 
     # ICMP/ICMPv6: path-MTU discovery, neighbour discovery, rate-limited ping
     icmp type { destination-unreachable, time-exceeded, parameter-problem } accept
@@ -1159,6 +1182,7 @@ AllowStreamLocalForwarding no
 GatewayPorts no
 PermitTunnel no
 UseDNS no
+DebianBanner no
 LogLevel VERBOSE
 HostKey /etc/ssh/ssh_host_ed25519_key
 HostKey /etc/ssh/ssh_host_rsa_key

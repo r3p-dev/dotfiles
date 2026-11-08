@@ -91,9 +91,6 @@ enabled = true
 curve = "spring:1,800"
 dim = 0.8
 blur = false
-scale = 0.0
-maximize = false
-fullscreen = false
 
 [animation.border]
 enabled = true

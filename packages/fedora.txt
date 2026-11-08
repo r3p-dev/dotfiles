@@ -25,6 +25,8 @@ ripgrep
 fzf
 7zip
 unzip
+tree
+compsize
 translate-shell
 poppler-utils
 ImageMagick
@@ -45,8 +47,8 @@ zbar
 imv
 mpv
 mpv-mpris
-gphoto2
 udisks2
+libva-utils
 
 # Development
 podman
@@ -55,13 +57,12 @@ gcc
 gcc-c++
 make
 clang
+golang
 ffmpeg-devel    # wl-screenrec (packages/cargo.txt)
 libdrm-devel    # wl-screenrec
 code
 gh
-cloudflared
 
 # Apps
 brave-origin
-gnome-keyring
-libsecret
+firefox

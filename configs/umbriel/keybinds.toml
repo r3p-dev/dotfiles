@@ -1,20 +1,19 @@
 [keybinds]
 
 # ──────────────────────────── Applications & Session ────────────────────────
-"Mod+Return" = "spawn:kitty"
-"Mod+B" = "spawn:brave-origin"
-"Mod+I" = "spawn:firefox"
-"Mod+K" = "spawn:code"
-"Mod+Y" = "spawn:kitty -e yazi"
-"Mod+N" = "spawn:nautilus"
+"Mod+Return" = "spawn kitty"
+"Mod+B" = "spawn brave-origin"
+"Mod+I" = "spawn firefox"
+"Mod+K" = "spawn code"
+"Mod+Y" = "spawn kitty -e yazi"
 
-"Mod" = "spawn:noctalia msg panel-toggle launcher"
-"Mod+V" = "spawn:noctalia msg panel-toggle clipboard"
-"Mod+Z" = "spawn:noctalia msg panel-toggle launcher /emo"
-"Mod+Ctrl+N" = "spawn:noctalia msg panel-toggle control-center"
-"Mod+X" = "spawn:noctalia msg panel-toggle noctalia/notes:panel"
-"Alt+F4" = "spawn:noctalia msg panel-toggle session"
-"Print" = "spawn:noctalia msg plugin alexander/screen-toolkit:service all toggle"
+"Mod" = "spawn noctalia msg panel-toggle launcher"
+"Mod+V" = "spawn noctalia msg panel-toggle clipboard"
+"Mod+Z" = "spawn noctalia msg panel-toggle launcher /emo"
+"Mod+Ctrl+N" = "spawn noctalia msg panel-toggle control-center"
+"Mod+X" = "spawn noctalia msg panel-toggle noctalia/notes:panel"
+"Alt+F4" = "spawn noctalia msg panel-toggle session"
+"Print" = "spawn noctalia msg plugin alexander/screen-toolkit:service all toggle"
 "Mod+Shift+Z" = "cheatsheet-toggle"
 
 "Mod+Q" = "window-close"
@@ -35,7 +34,7 @@
 "Mod+Shift+WheelUp" = "column-move-left"
 "Mod+Shift+WheelDown" = "column-move-right"
 
-"Mod+Tab" = "spawn:noctalia msg window-switcher"
+"Mod+Tab" = "spawn noctalia msg window-switcher"
 
 # ─────────────────────────── Window State & Layout ──────────────────────────
 "Mod+T" = "window-toggle-floating"
@@ -48,7 +47,7 @@
 "Mod+C" = "column-center"
 "Mod+Shift+C" = "window-center"
 
-"Mod+Backslash" = "workspace-set-layout:toggle:scrolling,dwindle,master"
+"Mod+Backslash" = "workspace-set-layout toggle scrolling dwindle master"
 
 # ──────────────────────────────── Overview ──────────────────────────────────
 "Mod+O" = { action = "overview-toggle", repeat = false }
@@ -59,10 +58,10 @@
 "Mod+Alt+R" = "window-cycle-secondary-extent"
 "Mod+Alt+Shift+R" = "window-cycle-secondary-extent-back"
 
-"Mod+Minus" = "window-modify-primary-extent:-0.1"
-"Mod+Equal" = "window-modify-primary-extent:0.1"
-"Mod+Alt+Minus" = "window-modify-secondary-extent:-0.1"
-"Mod+Alt+Equal" = "window-modify-secondary-extent:0.1"
+"Mod+Minus" = "window-modify-primary-extent -0.1"
+"Mod+Equal" = "window-modify-primary-extent 0.1"
+"Mod+Alt+Minus" = "window-modify-secondary-extent -0.1"
+"Mod+Alt+Equal" = "window-modify-secondary-extent 0.1"
 
 # ───────────────────────────── Window Consume / Expel ───────────────────────
 "Mod+Comma" = "window-consume-left"
@@ -88,14 +87,14 @@
 "Mod+Ctrl+Space" = "window-restore-from-scratchpad"
 
 # ────────────────────────────── Audio Controls ──────────────────────────────
-"XF86AudioRaiseVolume" = { action = "spawn:noctalia msg volume-up", allow_when_locked = true }
-"XF86AudioLowerVolume" = { action = "spawn:noctalia msg volume-down", allow_when_locked = true }
-"XF86AudioMute" = { action = "spawn:noctalia msg volume-mute", allow_when_locked = true }
-"XF86AudioPlay" = "spawn:noctalia msg media toggle"
-"XF86AudioNext" = "spawn:noctalia msg media next"
-"XF86AudioPrev" = "spawn:noctalia msg media previous"
-"XF86AudioStop" = "spawn:noctalia msg media stop"
+"XF86AudioRaiseVolume" = { action = "spawn noctalia msg volume-up", allow_when_locked = true }
+"XF86AudioLowerVolume" = { action = "spawn noctalia msg volume-down", allow_when_locked = true }
+"XF86AudioMute" = { action = "spawn noctalia msg volume-mute", allow_when_locked = true }
+"XF86AudioPlay" = "spawn noctalia msg media toggle"
+"XF86AudioNext" = "spawn noctalia msg media next"
+"XF86AudioPrev" = "spawn noctalia msg media previous"
+"XF86AudioStop" = "spawn noctalia msg media stop"
 
 # ─────────────────────────────── Display Brightness ─────────────────────────
-"XF86MonBrightnessDown" = { action = "spawn:noctalia msg brightness-down 10", allow_when_locked = true }
-"XF86MonBrightnessUp" = { action = "spawn:noctalia msg brightness-up 10", allow_when_locked = true }
+"XF86MonBrightnessDown" = { action = "spawn noctalia msg brightness-down 10", allow_when_locked = true }
+"XF86MonBrightnessUp" = { action = "spawn noctalia msg brightness-up 10", allow_when_locked = true }

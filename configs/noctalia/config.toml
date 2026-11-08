@@ -461,18 +461,18 @@ time_format = "{:%H:%M}"
     size = 32
 
     [shell.screenshot]
-    annotate = false
+    annotate = true
     close_on_copy = true
     confirm_region = true
     copy_to_clipboard = true
-    directory = ""
+    directory = "/home/r3p/Pictures/Screenshots"
     filename_pattern = ""
     freeze_screen = true
     pipe_command = ""
     pipe_to_command = false
     remember_last_region = true
-    save_to_file = false
-    show_cursor = true
+    save_to_file = true
+    show_cursor = false
 
     [shell.session]
     grid = false
